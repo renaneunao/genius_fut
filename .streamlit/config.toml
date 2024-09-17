@@ -1,0 +1,15 @@
+# Arquivo de configuração do Streamlit
+
+[theme]
+primaryColor = "#FFFFFF"               # Cor primária (botões, links)
+backgroundColor = "#000000"            # Cor de fundo principal (preto)
+secondaryBackgroundColor = "#333333"   # Cor de fundo para áreas secundárias
+textColor = "#FFFFFF"                  # Cor do texto
+font = "sans serif"                    # Tipo de fonte (pode ser alterado)
+
+# Configurações de layout
+[server]
+headless = true                        # Necessário para quando for usar em nuvem
+port = 8501                            # Porta padrão do Streamlit
+enableCORS = false                     # Para evitar problemas de CORS
+enableXsrfProtection = false
