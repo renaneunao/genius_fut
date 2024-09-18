@@ -5,6 +5,8 @@ from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
 from streamlit_cookies_controller import CookieController
+import pytz
+from datetime import datetime
 
 # Configurações do layout e tema
 st.set_page_config(page_title="IA BET", ) # layout="wide"
@@ -16,6 +18,24 @@ api_key_rapidapi = os.getenv("X-RAPIDAPI-KEY")
 
 # Initialize the CookieController
 controller = CookieController()
+
+# Função para converter o horário do jogo para o fuso horário selecionado
+def convert_timezone(fixture_date, timezone):
+    utc_time = pd.to_datetime(fixture_date).tz_localize('UTC')
+    local_time = utc_time.astimezone(pytz.timezone(timezone))
+    return local_time
+
+@st.cache_data
+def fetch_timezones():
+    url = "https://api-football-v1.p.rapidapi.com/v3/timezone"
+    headers = {
+        'x-rapidapi-key': api_key_rapidapi,
+        'x-rapidapi-host': "api-football-v1.p.rapidapi.com"
+    }
+    response = requests.get(url, headers=headers)
+    timezones_data = response.json()
+    return timezones_data.get('response', [])
+
 # Função para obter dados de países
 @st.cache_data
 def fetch_countries():
@@ -49,7 +69,8 @@ def fetch_leagues(country_name):
     return leagues_data.get('response', [])
 
 # Função para obter fixtures
-def fetch_fixtures(date, league_id):
+# Função para obter fixtures de acordo com a data, liga e timezone
+def fetch_fixtures(date, league_id, timezone):
     url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
     headers = {
         'x-rapidapi-key': api_key_rapidapi,
@@ -57,11 +78,20 @@ def fetch_fixtures(date, league_id):
     }
     # Extraindo o ano da data escolhida para a temporada
     season = pd.to_datetime(date).year
-    params = {"date": date, "league": league_id, "season": season}
+    params = {
+        "date": date,
+        "league": league_id,
+        "season": season,
+        "timezone": timezone  # Utiliza o timezone selecionado
+    }
     response = requests.get(url, headers=headers, params=params)
     fixtures_data = response.json()
-    # print("Fixtures Data:", fixtures_data)  # Debug
     return fixtures_data.get('response', [])
+
+# Sidebar para timezone
+timezones = fetch_timezones()
+
+selected_timezone = st.sidebar.selectbox("Selecione o timezone:", timezones, index=timezones.index("America/Sao_Paulo"))  # Define "America/Sao_Paulo" como padrão
 
 # Função para obter predições
 def get_prediction(fixture_id):
@@ -118,18 +148,33 @@ def get_prediction(fixture_id):
 # Sidebar para configurações
 st.sidebar.title("Configurações")
 
-# Selecionar idioma
+# Lista de idiomas
 languages = ['Inglês', 'Espanhol', 'Chinês', 'Hindi', 'Árabe', 'Português', 'Bengali', 'Russo', 'Japonês', 'Lahnda',
              'Alemão', 'Francês', 'Coreano', 'Italiano', 'Turco', 'Vietnamita', 'Polonês', 'Ucraniano', 'Holandês', 'Grego']
-selected_language = st.sidebar.selectbox("Selecione o idioma:", languages, index=languages.index(controller.get('language')))
+
+# Obter o idioma selecionado do cookie ou usar o primeiro idioma da lista como padrão
+selected_language_cookie = controller.get('language')
+if selected_language_cookie in languages:
+    selected_language = selected_language_cookie
+else:
+    selected_language = languages[5]  # Defina um valor padrão, por exemplo, o primeiro idioma da lista
+
+# Seleção do idioma na sidebar
+selected_language = st.sidebar.selectbox("Selecione o idioma:", languages, index=languages.index(selected_language))
 controller.set('language', selected_language)
 
 # Campo de entrada para nome do usuário
 user_name = st.sidebar.text_input("Digite seu nome:", value=controller.get('user_name'))
 controller.set('user_name', user_name)
 
-# Converte o valor do cookie para float, se não for None
-bet_temperature = float(controller.get('bet_temperature'))
+bet_temperature_value = controller.get('bet_temperature')
+
+if bet_temperature_value is not None:
+    bet_temperature = float(bet_temperature_value)
+else:
+    # Handle the None case (e.g., set a default value or raise an error)
+    bet_temperature = 0.5  # or any other default value you want
+
 
 # Configura o slider
 bet_temperature = st.sidebar.slider(
@@ -204,7 +249,7 @@ if countries:
                     (league['league']['id'] for league in leagues if league['league']['name'] == selected_league), None)
                 if league_id:
                     with st.spinner("Carregando jogos..."):
-                        fixtures = fetch_fixtures(date, league_id)
+                        fixtures = fetch_fixtures(date, league_id, selected_timezone)
                     if fixtures:
                         games = [
                             {
