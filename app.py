@@ -302,34 +302,52 @@ if countries:
 
                                 prompt = (
                                     f"""
-                                    Sempre me chame pelo meu nome, mesmo que isso seja ridículo. Meu nome é: {user_name}
-                                    Você é um especialista em apostas online, focado em oferecer a melhor dica baseada no conteúdo de um JSON fornecido. 
-                                    Sempre responda de forma confiante, como alguém com grande experiência em bets, e adapte sua resposta ao que está no JSON. 
-                                    Lembre-se de que quem está lendo já entende de apostas, então evite ser excessivamente cauteloso ou explicar demais. 
-                                    O ambiente é descontraído, e seu papel é destacar a aposta contida no JSON (mas não mencione que o resultado vem de um json.
-                                    Responda como se voce tivesse calculado e obtido uma aposta sólida, como resultado de inteligência artificial). 
-                                    Abaixo responda com uma tabela com a equipe e na frente a aposta. 
-                                    Sempre responda em {selected_language}, e adicione as estatísticas à tabela gerada. Seja profissional.
-                                    Agora, com base no seguinte JSON, dê sua dica:
+                                    Sempre responda em {selected_language}
+                                    Sempre me chame pelo meu nome. Meu nome é: {user_name}.
+                                    Você é um especialista em apostas online, com foco em fornecer a melhor dica com 
+                                    base nas informações de um JSON fornecido. 
+                                    Responda com confiança, como um profissional experiente em apostas, e alinhe sua 
+                                    resposta com o conteúdo do JSON.
+                                    Lembre-se de que quem lê já entende de apostas, então evite ser excessivamente 
+                                    cauteloso ou explicar demais.
+                                    O ambiente é descontraído e seu papel é destacar a aposta contida no JSON, sem 
+                                    mencionar que a informação vem de um JSON.
+                                    Responda como se tivesse calculado uma aposta sólida, como resultado de inteligência 
+                                    artificial e inclua as estatísticas na tabela gerada. Mostre na tabela apenas a
+                                    equipe que for mencionada na aposta principal.
+                                    Abaixo, apresente uma tabela com a equipe e, ao lado, a aposta.
+                                    Casa: {home_team_name}, Visitante: {away_team_name}.
+                                    Com base no seguinte JSON, forneça sua dica:
                                     {str(predictions)}
-                                    Utilize essas estatísticas adicionais para montar a resposta.
-                                    Não é necessário adicionar os dados à tabela, somente ao texto de resposta.
-                                    (considere W - Vitória, D - Empate, L - Perda):
-                                    Últimos 5 jogos da casa: {home_team_last_5_results}
-                                    Últimos 5 jogos do visitante: {away_team_last_5_results}
+                                    Utilize as estatísticas adicionais para compor a resposta, sem adicionar dados à 
+                                    tabela, apenas no texto.
+                                    (Considere W - Vitória, D - Empate, L - Perda):
+                                    Últimos 5 jogos da casa: {home_team_last_5_results}.
+                                    Últimos 5 jogos do visitante: {away_team_last_5_results}.
                                     Temperatura da aposta:
-                                    - Considere que 0 é instrução para ser extremamente seguro, e 1 extremamente arriscado.
-                                    Temperatura escolhida: {bet_temperature}
+                                    - Considere que 0 indica extrema segurança e 1, extrema risco.
+                                    Temperatura escolhida: {bet_temperature}.
+                                    Além da aposta sugerida, se a temperatura for acima da média, sugira outras opções
+                                    mais arriscadas, que envolvam as estatísticas de gols do json, sem mencionar a 
+                                    temperatura. As apostas sugeridas devem estar em uma tabela secundária.
+                                    Temperatura 0, nenhuma sugestão extra. Temperatura em 0.5, uma ou duas sugestões.
+                                    Temperatua em 1, 3 ou mais sugestões.
+                                    Se o json mostra uma tendencia under gols, não sugira over.
+                                    Se o json mostra uma tendencia over gols, não sugira under.
                                     """
                                 )
 
                                 llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai)
 
-                                # Cria a chain para lidar com o LLM
-                                chain = llm.invoke(prompt)
+                                # Adiciona o spinner enquanto aguarda a resposta da LLM
+                                with st.spinner("Calculando previsão..."):
+                                    # Cria a chain para lidar com o LLM
+                                    chain = llm.invoke(prompt)
 
-                                response = chain.content
-                                st.write(response)
+                                    response = chain.content
+                                    # st.write(predictions)
+                                    st.write(response)
+
                     else:
                         st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
                 else:
