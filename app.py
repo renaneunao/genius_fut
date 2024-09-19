@@ -336,8 +336,8 @@ if countries:
                                     Se o json mostra uma tendencia over gols, não sugira under.
                                     Se a temperatura estiver muito alta, pode ousar nas sugestões, inclusive se a tendencia 
                                     over gols, pode incrementar o over, e o mesmo para under. Exemplo:
-                                    casa -3.5 (tendência): tip: -2.5 gols.
-                                    fora +2.5 gols (tendência): tip +3,5 gols.
+                                    se a tendência for under: -3.5 (tendência) -> tip: -2.5 gols.
+                                    se a tendência for over: +2.5 gols (tendência) -> tip +3,5 gols.
                                     """
                                 )
 
