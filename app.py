@@ -327,7 +327,10 @@ if countries:
                                     Temperatura escolhida: {bet_temperature}.
                                     10. Além da aposta sugerida, se a temperatura for acima da média, sugira outras opções
                                     mais arriscadas, que envolvam as estatísticas de gols do json, sem mencionar a 
-                                    temperatura. As apostas sugeridas devem estar em uma tabela secundária.
+                                    temperatura. As apostas sugeridas devem estar em uma tabela secundária, enumerada,
+                                    sem sugerir duas apostas para a mesma linha. Por exemplo: não sugira na mesma tabela
+                                    de sugestões adicionais as apostas (+2,5 gols e +3,5 gols), porque são duas
+                                    apostas da mesma linha.
                                     Temperatura 0, nenhuma sugestão extra. Temperatura em 0.5, uma ou duas sugestões.
                                     Temperatua em 1, 3 ou mais sugestões.
                                     11. Se o json mostra uma tendencia under gols, não sugira over.
@@ -336,11 +339,6 @@ if countries:
                                     over gols, pode incrementar o over, e o mesmo para under. Exemplo:
                                     se a tendência for under: -3.5 (tendência) -> tip: -2.5 gols.
                                     se a tendência for over: +2.5 gols (tendência) -> tip +3,5 gols.
-                                    13. Não dê duas dicas para a mesma linha nas sugestões secundárias, por exemplo:
-                                    'Aposta em menos de 2.5 gols.
-                                     Aposta em menos de 3.5 gols.'. São apostas da mesma linha, não faça. Quero uma
-                                     sugestão por linha.
-                                    14. Na tabela secundária, separe as sugestões enumerando. 
                                     """
                                 )
 
