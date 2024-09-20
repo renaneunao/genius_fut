@@ -328,9 +328,8 @@ if countries:
                                     10. Além da aposta principal sugerida, se a temperatura estiver acima da média, 
                                     ofereça opções adicionais mais arriscadas baseadas nas estatísticas de gols do JSON, 
                                     sem mencionar a temperatura. Essas apostas adicionais devem estar em uma tabela 
-                                    separada, numerada. Cada linha da tabela deve conter apenas uma sugestão de aposta 
-                                    por evento. Por exemplo, não sugerir múltiplas apostas da mesma categoria como: 
-                                    (+2,5 gols e +3,5 gols).
+                                    separada, numerada. Se for uma sugestão de under/over gols para o jogo, mencione o jogo. 
+                                    se for uma sugestão de under/over gols para um time específico, mencione o time.
                                     Temperatura 0, nenhuma sugestão extra. Temperatura em 0.5, uma ou duas sugestões.
                                     Temperatua em 1, 3 ou mais sugestões.
                                     11. Se o json mostra uma tendencia under gols, não sugira over.
