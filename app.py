@@ -336,7 +336,10 @@ if countries:
                                     over gols, pode incrementar o over, e o mesmo para under. Exemplo:
                                     se a tendência for under: -3.5 (tendência) -> tip: -2.5 gols.
                                     se a tendência for over: +2.5 gols (tendência) -> tip +3,5 gols.
-                                    13. Não dê duas dicas para a mesma linha nas sugestões secundárias.
+                                    13. Não dê duas dicas para a mesma linha nas sugestões secundárias, por exemplo:
+                                    'Aposta em menos de 2.5 gols.
+                                     Aposta em menos de 3.5 gols.'. São apostas da mesma linha, não faça. Quero uma
+                                     sugestão por linha.
                                     14. Na tabela secundária, separe as sugestões enumerando. 
                                     """
                                 )
