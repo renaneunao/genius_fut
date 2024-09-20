@@ -250,7 +250,7 @@ if countries:
                     if fixtures:
                         games = [
                             {
-                                'game_info': f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']} - {fixture['fixture']['date']}",
+                                'game_info': f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']} - {datetime.strptime(fixture['fixture']['date'], '%Y-%m-%dT%H:%M:%S%z').strftime('%H:%M')}",
                                 'fixture_id': fixture['fixture']['id']
                             }
                             for fixture in fixtures
@@ -300,7 +300,7 @@ if countries:
                                 prompt = (
                                     f"""
                                     1. Sempre responda em {selected_language}
-                                    2. Sempre me chame pelo meu nome. Meu nome é: {user_name}.
+                                    2. Sempre me chame pelo meu nome. Meu nome é: {user_name}. (se o nome vier None, ignore)
                                     3. Você é um especialista em apostas online, com foco em fornecer a melhor dica com 
                                     base nas informações de um JSON fornecido. 
                                     4. Responda com confiança, como um profissional experiente em apostas, e alinhe sua 
@@ -321,7 +321,7 @@ if countries:
                                     Últimos 5 jogos do visitante: {away_team_last_5_results}.
                                     9. Temperatura da aposta:
                                     - Considere que 0 indica extrema segurança e 1, extrema risco.
-                                    Temperatura escolhida: {bet_temperature}.
+                                    Temperatura escolhida: {bet_temperature}. Não mencione a temperatura, apenas use-a.
                                     10. Além da aposta principal sugerida, se a temperatura estiver acima da média, 
                                     ofereça opções adicionais mais arriscadas baseadas nas estatísticas de gols do JSON, 
                                     sem mencionar a temperatura. Essas apostas adicionais devem estar em uma tabela 
