@@ -235,131 +235,127 @@ if countries:
             leagues = fetch_leagues(selected_country)
         if leagues:
             league_names = [league['league']['name'] for league in leagues]
-            league_logos = [league['league']['logo'] for league in leagues]
 
-            # Container para as logos das ligas
-            cols = st.sidebar.columns(len(league_logos))
-            selected_league_id = None
+            # Selecionar a liga armazenada, se disponível
+            selected_league = st.sidebar.selectbox("Selecione a liga:", league_names, index=league_names.index(
+                controller.get('selected_league')) if controller.get('selected_league') in league_names else 0)
+            controller.set('selected_league', selected_league)
 
-            for i, logo_url in enumerate(league_logos):
-                with cols[i]:
-                    if st.sidebar.button("", key=i):
-                        selected_league_id = leagues[i]['league']['id']
-                    st.sidebar.image(logo_url, width=40)
-            controller.set('selected_league', selected_league_id)
+            if selected_league:
+                league_id = next(
+                    (league['league']['id'] for league in leagues if league['league']['name'] == selected_league), None)
+                if league_id:
+                    with st.spinner("Carregando jogos..."):
+                        fixtures = fetch_fixtures(date, league_id, selected_timezone)
+                    if fixtures:
+                        games = [
+                            {
+                                'game_info': f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']} - {fixture['fixture']['date']}",
+                                'fixture_id': fixture['fixture']['id']
+                            }
+                            for fixture in fixtures
+                        ]
+                        game_options = [game['game_info'] for game in games]
+                        selected_game_info = st.sidebar.selectbox("Escolha um jogo:", game_options)
 
-            if selected_league_id and date:
-                with st.spinner("Carregando jogos..."):
-                    fixtures = fetch_fixtures(date, selected_league_id, selected_timezone)
-                if fixtures:
-                    games = [
-                        {
-                            'game_info': f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']} - {fixture['fixture']['date']}",
-                            'fixture_id': fixture['fixture']['id']
-                        }
-                        for fixture in fixtures
-                    ]
-                    game_options = [game['game_info'] for game in games]
-                    selected_game_info = st.sidebar.selectbox("Escolha um jogo:", game_options)
-
-                    if selected_game_info:
-                        fixture_id = next(
-                            game['fixture_id'] for game in games if game['game_info'] == selected_game_info
-                        )
-
-                        # Adiciona um botão para calcular as previsões
-                        if st.sidebar.button("Calcular Previsão"):
-                            (home_team_logo_url,
-                             away_team_logo_url,
-                             home_team_name,
-                             away_team_name,
-                             home_team_last_5_games,
-                             away_team_last_5_games,
-                             predictions) = get_prediction(fixture_id)
-
-                            # Display the logos and other details side by side
-                            col1, col2 = st.columns(2)
-
-                            with col1:
-                                if home_team_logo_url != 'N/A':
-                                    st.image(home_team_logo_url)
-                                    st.write(f"**{home_team_name}**")
-                                    st.write(home_team_last_5_games)
-
-                            with col2:
-                                if away_team_logo_url != 'N/A':
-                                    st.image(away_team_logo_url)
-                                    st.write(f"**{away_team_name}**")
-                                    st.write(away_team_last_5_games)
-
-                            # Mapping results to colored dots
-                            result_map = {'🟢': 'W', '🔴': 'L', '⚪': 'D'}
-                            home_team_last_5_results = ''.join(
-                                result_map.get(result, result) for result in home_team_last_5_games)
-                            away_team_last_5_results = ''.join(
-                                result_map.get(result, result) for result in away_team_last_5_games)
-
-                            st.write("**Inteligência Artificial Calculando:**")
-
-                            prompt = (
-                                f"""
-                                1. Sempre responda em {selected_language}
-                                2. Sempre me chame pelo meu nome. Meu nome é: {user_name}.
-                                3. Você é um especialista em apostas online, com foco em fornecer a melhor dica com 
-                                base nas informações de um JSON fornecido. 
-                                4. Responda com confiança, como um profissional experiente em apostas, e alinhe sua 
-                                resposta com o conteúdo do JSON.
-                                5. O ambiente é descontraído e seu papel é destacar a aposta contida no JSON, sem 
-                                mencionar que a informação vem de um JSON.
-                                6. Responda como se tivesse calculado uma aposta sólida, como resultado de inteligência 
-                                artificial e inclua as estatísticas na tabela gerada. Mostre na tabela apenas a
-                                equipe que for mencionada na aposta principal.
-                                7. Abaixo, apresente uma tabela com a equipe e, ao lado, a aposta.
-                                Casa: {home_team_name}, Visitante: {away_team_name}.
-                                Com base no seguinte JSON, forneça sua dica:
-                                {str(predictions)}
-                                8. Utilize as estatísticas adicionais para compor a resposta, sem adicionar dados à 
-                                tabela, apenas no texto.
-                                (Considere W - Vitória, D - Empate, L - Perda):
-                                Últimos 5 jogos da casa: {home_team_last_5_results}.
-                                Últimos 5 jogos do visitante: {away_team_last_5_results}.
-                                9. Temperatura da aposta:
-                                - Considere que 0 indica extrema segurança e 1, extrema risco.
-                                Temperatura escolhida: {bet_temperature}.
-                                10. Além da aposta principal sugerida, se a temperatura estiver acima da média, 
-                                ofereça opções adicionais mais arriscadas baseadas nas estatísticas de gols do JSON, 
-                                sem mencionar a temperatura. Essas apostas adicionais devem estar em uma tabela 
-                                separada, numerada. Se for uma sugestão de under/over gols para o jogo, mencione o jogo. 
-                                se for uma sugestão de under/over gols para um time específico, mencione o time.
-                                Temperatura 0, nenhuma sugestão extra. Temperatura em 0.5, uma ou duas sugestões.
-                                Temperatua em 1, 3 ou mais sugestões.
-                                11. Se o json mostra uma tendencia under gols, não sugira over.
-                                Se o json mostra uma tendencia over gols, não sugira under.
-                                12. Se a temperatura estiver muito alta, pode ousar nas sugestões, inclusive se a tendencia 
-                                over gols, pode incrementar o over, e o mesmo para under. Exemplo:
-                                se a tendência for under: -3.5 (tendência) -> tip: -2.5 gols.
-                                se a tendência for over: +2.5 gols (tendência) -> tip +3,5 gols.
-                                """
+                        if selected_game_info:
+                            fixture_id = next(
+                                game['fixture_id'] for game in games if game['game_info'] == selected_game_info
                             )
 
-                            llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai)
+                            # Adiciona um botão para calcular as previsões
+                            if st.sidebar.button("Calcular Previsão"):
+                                (home_team_logo_url,
+                                 away_team_logo_url,
+                                 home_team_name,
+                                 away_team_name,
+                                 home_team_last_5_games,
+                                 away_team_last_5_games,
+                                 predictions) = get_prediction(fixture_id)
 
-                            # Adiciona o spinner enquanto aguarda a resposta da LLM
-                            with st.spinner("Calculando previsão..."):
-                                # Cria a chain para lidar com o LLM
-                                chain = llm.invoke(prompt)
+                                # Display the logos and other details side by side
+                                col1, col2 = st.columns(2)
 
-                                response = chain.content
-                                # st.write(predictions)
-                                st.write(response)
+                                with col1:
+                                    if home_team_logo_url != 'N/A':
+                                        st.image(home_team_logo_url)
+                                        st.write(f"**{home_team_name}**")
+                                        st.write(home_team_last_5_games)
 
+                                with col2:
+                                    if away_team_logo_url != 'N/A':
+                                        st.image(away_team_logo_url)
+                                        st.write(f"**{away_team_name}**")
+                                        st.write(away_team_last_5_games)
+
+                                # Mapping results to colored dots
+                                result_map = {'🟢': 'W', '🔴': 'L', '⚪': 'D'}
+                                home_team_last_5_results = ''.join(
+                                    result_map.get(result, result) for result in home_team_last_5_games)
+                                away_team_last_5_results = ''.join(
+                                    result_map.get(result, result) for result in away_team_last_5_games)
+
+                                st.write("**Inteligência Artificial Calculando:**")
+
+                                prompt = (
+                                    f"""
+                                    1. Sempre responda em {selected_language}
+                                    2. Sempre me chame pelo meu nome. Meu nome é: {user_name}.
+                                    3. Você é um especialista em apostas online, com foco em fornecer a melhor dica com 
+                                    base nas informações de um JSON fornecido. 
+                                    4. Responda com confiança, como um profissional experiente em apostas, e alinhe sua 
+                                    resposta com o conteúdo do JSON.
+                                    5. O ambiente é descontraído e seu papel é destacar a aposta contida no JSON, sem 
+                                    mencionar que a informação vem de um JSON.
+                                    6. Responda como se tivesse calculado uma aposta sólida, como resultado de inteligência 
+                                    artificial e inclua as estatísticas na tabela gerada. Mostre na tabela apenas a
+                                    equipe que for mencionada na aposta principal.
+                                    7. Abaixo, apresente uma tabela com a equipe e, ao lado, a aposta.
+                                    Casa: {home_team_name}, Visitante: {away_team_name}.
+                                    Com base no seguinte JSON, forneça sua dica:
+                                    {str(predictions)}
+                                    8. Utilize as estatísticas adicionais para compor a resposta, sem adicionar dados à 
+                                    tabela, apenas no texto.
+                                    (Considere W - Vitória, D - Empate, L - Perda):
+                                    Últimos 5 jogos da casa: {home_team_last_5_results}.
+                                    Últimos 5 jogos do visitante: {away_team_last_5_results}.
+                                    9. Temperatura da aposta:
+                                    - Considere que 0 indica extrema segurança e 1, extrema risco.
+                                    Temperatura escolhida: {bet_temperature}.
+                                    10. Além da aposta principal sugerida, se a temperatura estiver acima da média, 
+                                    ofereça opções adicionais mais arriscadas baseadas nas estatísticas de gols do JSON, 
+                                    sem mencionar a temperatura. Essas apostas adicionais devem estar em uma tabela 
+                                    separada, numerada. Se for uma sugestão de under/over gols para o jogo, mencione o jogo. 
+                                    se for uma sugestão de under/over gols para um time específico, mencione o time.
+                                    Temperatura 0, nenhuma sugestão extra. Temperatura em 0.5, uma ou duas sugestões.
+                                    Temperatua em 1, 3 ou mais sugestões.
+                                    11. Se o json mostra uma tendencia under gols, não sugira over.
+                                    Se o json mostra uma tendencia over gols, não sugira under.
+                                    12. Se a temperatura estiver muito alta, pode ousar nas sugestões, inclusive se a tendencia 
+                                    over gols, pode incrementar o over, e o mesmo para under. Exemplo:
+                                    se a tendência for under: -3.5 (tendência) -> tip: -2.5 gols.
+                                    se a tendência for over: +2.5 gols (tendência) -> tip +3,5 gols.
+                                    """
+                                )
+
+                                llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai)
+
+                                # Adiciona o spinner enquanto aguarda a resposta da LLM
+                                with st.spinner("Calculando previsão..."):
+                                    # Cria a chain para lidar com o LLM
+                                    chain = llm.invoke(prompt)
+
+                                    response = chain.content
+                                    # st.write(predictions)
+                                    st.write(response)
+
+                    else:
+                        st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
                 else:
-                    st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
+                    st.write("ID da liga não encontrado.")
             else:
-                st.write("ID da liga não encontrado.")
+                st.write("Nenhuma liga encontrada para o país selecionado.")
         else:
             st.write("Nenhuma liga encontrada para o país selecionado.")
-    else:
-        st.write("Nenhuma liga encontrada para o país selecionado.")
 else:
     st.write("Nenhum país encontrado.")
