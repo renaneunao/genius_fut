@@ -1,11 +1,8 @@
 # Arquivo de configuração do Streamlit
 
 [theme]
-primaryColor = "#FFFFFF"               # Cor primária (botões, links)
-backgroundColor = "#000000"            # Cor de fundo principal (preto)
-secondaryBackgroundColor = "#333333"   # Cor de fundo para áreas secundárias
-textColor = "#FFFFFF"                  # Cor do texto
-font = "sans serif"                    # Tipo de fonte (pode ser alterado)
+base="dark"
+primaryColor="green"
 
 # Configurações de layout
 [server]
