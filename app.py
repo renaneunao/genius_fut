@@ -198,7 +198,7 @@ with st.sidebar.expander("Configurações Gerais"):
             margin-top: -20px;
         }
         .slider-container div {
-            font-size: 24px;
+            font-size: 15px;
         }
         .slider-container .min-emoji {
             margin-right: 10px;
