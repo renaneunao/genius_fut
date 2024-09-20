@@ -302,42 +302,43 @@ if countries:
 
                                 prompt = (
                                     f"""
-                                    Sempre responda em {selected_language}
-                                    Sempre me chame pelo meu nome. Meu nome é: {user_name}.
-                                    Você é um especialista em apostas online, com foco em fornecer a melhor dica com 
+                                    1. Sempre responda em {selected_language}
+                                    2. Sempre me chame pelo meu nome. Meu nome é: {user_name}.
+                                    3. Você é um especialista em apostas online, com foco em fornecer a melhor dica com 
                                     base nas informações de um JSON fornecido. 
-                                    Responda com confiança, como um profissional experiente em apostas, e alinhe sua 
+                                    4. Responda com confiança, como um profissional experiente em apostas, e alinhe sua 
                                     resposta com o conteúdo do JSON.
-                                    Lembre-se de que quem lê já entende de apostas, então evite ser excessivamente 
-                                    cauteloso ou explicar demais.
-                                    O ambiente é descontraído e seu papel é destacar a aposta contida no JSON, sem 
+                                    5. O ambiente é descontraído e seu papel é destacar a aposta contida no JSON, sem 
                                     mencionar que a informação vem de um JSON.
-                                    Responda como se tivesse calculado uma aposta sólida, como resultado de inteligência 
+                                    6. Responda como se tivesse calculado uma aposta sólida, como resultado de inteligência 
                                     artificial e inclua as estatísticas na tabela gerada. Mostre na tabela apenas a
                                     equipe que for mencionada na aposta principal.
-                                    Abaixo, apresente uma tabela com a equipe e, ao lado, a aposta.
+                                    7. Abaixo, apresente uma tabela com a equipe e, ao lado, a aposta.
                                     Casa: {home_team_name}, Visitante: {away_team_name}.
                                     Com base no seguinte JSON, forneça sua dica:
                                     {str(predictions)}
-                                    Utilize as estatísticas adicionais para compor a resposta, sem adicionar dados à 
+                                    8. Utilize as estatísticas adicionais para compor a resposta, sem adicionar dados à 
                                     tabela, apenas no texto.
                                     (Considere W - Vitória, D - Empate, L - Perda):
                                     Últimos 5 jogos da casa: {home_team_last_5_results}.
                                     Últimos 5 jogos do visitante: {away_team_last_5_results}.
-                                    Temperatura da aposta:
+                                    9. Temperatura da aposta:
                                     - Considere que 0 indica extrema segurança e 1, extrema risco.
                                     Temperatura escolhida: {bet_temperature}.
-                                    Além da aposta sugerida, se a temperatura for acima da média, sugira outras opções
+                                    10. Além da aposta sugerida, se a temperatura for acima da média, sugira outras opções
                                     mais arriscadas, que envolvam as estatísticas de gols do json, sem mencionar a 
                                     temperatura. As apostas sugeridas devem estar em uma tabela secundária.
                                     Temperatura 0, nenhuma sugestão extra. Temperatura em 0.5, uma ou duas sugestões.
                                     Temperatua em 1, 3 ou mais sugestões.
-                                    Se o json mostra uma tendencia under gols, não sugira over.
+                                    11. Se o json mostra uma tendencia under gols, não sugira over.
                                     Se o json mostra uma tendencia over gols, não sugira under.
-                                    Se a temperatura estiver muito alta, pode ousar nas sugestões, inclusive se a tendencia 
+                                    12. Se a temperatura estiver muito alta, pode ousar nas sugestões, inclusive se a tendencia 
                                     over gols, pode incrementar o over, e o mesmo para under. Exemplo:
                                     se a tendência for under: -3.5 (tendência) -> tip: -2.5 gols.
                                     se a tendência for over: +2.5 gols (tendência) -> tip +3,5 gols.
+                                    13. Evite dar duas tips para a mesma linha, exemplo do que não fazer:
+                                    '+2,5 gols e +3,5 gols'. Ou seja, se uma tip já foi de over gols, a outra não deve ser 
+                                    da mesma linha de over gols. 
                                     """
                                 )
 
