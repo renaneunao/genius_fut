@@ -68,16 +68,13 @@ def fetch_leagues(country_name):
     # print("Leagues Data:", leagues_data)  # Debug
     return leagues_data.get('response', [])
 
-# Função para obter fixtures
-# Função para obter fixtures de acordo com a data, liga e timezone
+
 def fetch_fixtures(date, league_id, timezone):
     url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
     headers = {
         'x-rapidapi-key': api_key_rapidapi,
         'x-rapidapi-host': "api-football-v1.p.rapidapi.com"
     }
-    # Extraindo o ano da data escolhida para a temporada
-    season = pd.to_datetime(date).year
     params = {
         "date": date,
         "league": league_id,
@@ -88,12 +85,86 @@ def fetch_fixtures(date, league_id, timezone):
     fixtures_data = response.json()
     return fixtures_data.get('response', [])
 
+# Função para obter estatísticas do time
+@st.cache_data
+def fetch_team_stats(season, team_id):
+    url = "https://api-football-v1.p.rapidapi.com/v3/standings"
+    headers = {
+        'x-rapidapi-key': api_key_rapidapi,
+        'x-rapidapi-host': "api-football-v1.p.rapidapi.com"
+    }
+    params = {"season": season, "team": team_id}
+    response = requests.get(url, headers=headers, params=params)
+    standings_data = response.json()
+
+    if standings_data.get('response'):
+        team_stats = standings_data['response'][0]['league']['standings'][0][0]
+        return team_stats
+    else:
+        return None
+
+
+def stats_to_dataframe(team_stats, team_name):
+    if team_stats:
+        data = {
+            "Tipo": ["Casa", "Fora", "Total"],
+            "Jogos": [
+                team_stats.get('home', {}).get('played', 0),
+                team_stats.get('away', {}).get('played', 0),
+                team_stats.get('all', {}).get('played', 0)
+            ],
+            "Vitórias": [
+                team_stats.get('home', {}).get('win', 0),
+                team_stats.get('away', {}).get('win', 0),
+                team_stats.get('all', {}).get('win', 0)
+            ],
+            "Gols Marcados": [
+                team_stats.get('home', {}).get('goals', {}).get('for', 0),
+                team_stats.get('away', {}).get('goals', {}).get('for', 0),
+                team_stats.get('all', {}).get('goals', {}).get('for', 0)
+            ],
+            "Gols Sofridos": [
+                team_stats.get('home', {}).get('goals', {}).get('against', 0),
+                team_stats.get('away', {}).get('goals', {}).get('against', 0),
+                team_stats.get('all', {}).get('goals', {}).get('against', 0)
+            ]
+        }
+
+        df = pd.DataFrame(data)
+
+        # Calcular as médias
+        df["Média de Gols Marcados"] = df["Gols Marcados"] / df["Jogos"].replace(0, pd.NA)
+        df["Média de Gols Sofridos"] = df["Gols Sofridos"] / df["Jogos"].replace(0, pd.NA)
+
+        # Centralizar os dados no DataFrame usando st.table
+        st.subheader(f"Estatísticas de {team_name}")
+        st.table(df.style.set_properties(**{'text-align': 'center'}))
+
+        return df
+    else:
+        st.write(f"Estatísticas para {team_name} não disponíveis.")
+
+
 # Sidebar para timezone
 timezones = fetch_timezones()
 
-selected_timezone = st.sidebar.selectbox("Selecione o timezone:", timezones, index=timezones.index("America/Sao_Paulo"))  # Define "America/Sao_Paulo" como padrão
-# Selecionar data
+# Timezone padrão
+default_timezone = "America/Sao_Paulo"
+
+# Exibe uma dica com a mensagem "horários de"
+st.sidebar.write(f"Horários de {default_timezone}")
+
+# Tratando a troca de timezone
+if st.sidebar.button("Trocar timezone"):
+    selected_timezone = st.sidebar.selectbox("Selecione o timezone:", timezones, index=timezones.index(default_timezone))
+else:
+    selected_timezone = default_timezone
+
+
 date = st.sidebar.date_input("Selecione a data:", pd.to_datetime('today'), format="DD/MM/YYYY")
+
+# Extraindo o ano da data escolhida para a temporada
+season = pd.to_datetime(date).year
 
 # Função para obter predições
 def get_prediction(fixture_id):
@@ -111,6 +182,10 @@ def get_prediction(fixture_id):
         # Extracting information safely
         home_team = prediction.get('teams', {}).get('home', {})
         away_team = prediction.get('teams', {}).get('away', {})
+
+        # Corrigindo a extração dos IDs das equipes
+        team_id_home = home_team.get('id')  # Obter o ID do time da casa
+        team_id_away = away_team.get('id')  # Obter o ID do time visitante
 
         if home_team is None or away_team is None:
             return 'N/A', 'N/A', 'No data available', 'No advice available', 'No data available', 'No data available', 'No advice available'
@@ -142,10 +217,12 @@ def get_prediction(fixture_id):
                 away_team_name,
                 home_team_last_5_games,
                 away_team_last_5_games,
-                predictions)
+                predictions,
+                team_id_home,
+                team_id_away)
     else:
         # Return default values if no data is available
-        return 'N/A', 'N/A', 'No data available', 'No advice available', 'No data available', 'No data available', 'No advice available'
+        return 'N/A', 'N/A', 'No data available', 'No advice available', 'No data available', 'No data available', 'No advice available', None, None
 
 # Sidebar para configurações
 with st.sidebar.expander("Configurações Gerais"):
@@ -271,7 +348,9 @@ if countries:
                                  away_team_name,
                                  home_team_last_5_games,
                                  away_team_last_5_games,
-                                 predictions) = get_prediction(fixture_id)
+                                 predictions,
+                                 team_id_home,
+                                 team_id_away) = get_prediction(fixture_id)
 
                                 # Display the logos and other details side by side
                                 col1, col2 = st.columns(2)
@@ -295,46 +374,80 @@ if countries:
                                 away_team_last_5_results = ''.join(
                                     result_map.get(result, result) for result in away_team_last_5_games)
 
+                                # Obter estatísticas para os dois times
+                                home_team_stats = fetch_team_stats(season, team_id_home)
+                                away_team_stats = fetch_team_stats(season, team_id_away)
+
+                                # Exibir estatísticas na interface
+                                st.title("Análise de Desempenho - Estatísticas de Futebol")
+
+                                # Converter estatísticas em DataFrame e exibir
+                                stats_casa = stats_to_dataframe(home_team_stats, "Time da Casa")
+                                stats_fora = stats_to_dataframe(away_team_stats, "Time Visitante")
+
                                 st.write("**Inteligência Artificial Calculando:**")
 
                                 prompt = (
                                     f"""
-                                    1. Sempre responda em {selected_language}
-                                    2. Sempre me chame pelo meu nome. Meu nome é: {user_name}. (se o nome vier None, ignore)
-                                    3. Você é um especialista em apostas online, com foco em fornecer a melhor dica com 
-                                    base nas informações de um JSON fornecido. 
-                                    4. Responda com confiança, como um profissional experiente em apostas, e alinhe sua 
-                                    resposta com o conteúdo do JSON.
-                                    5. O ambiente é descontraído e seu papel é destacar a aposta contida no JSON, sem 
-                                    mencionar que a informação vem de um JSON.
-                                    6. Responda como se tivesse calculado uma aposta sólida, como resultado de inteligência 
-                                    artificial e inclua as estatísticas na tabela gerada. Mostre na tabela apenas a
-                                    equipe que for mencionada na aposta principal.
-                                    7. Abaixo, apresente uma tabela com a equipe e, ao lado, a aposta.
-                                    Casa: {home_team_name}, Visitante: {away_team_name}.
-                                    Com base no seguinte JSON, forneça sua dica:
-                                    {str(predictions)}
-                                    8. Utilize as estatísticas adicionais para compor a resposta, sem adicionar dados à 
-                                    tabela, apenas no texto.
-                                    (Considere W - Vitória, D - Empate, L - Perda):
-                                    Últimos 5 jogos da casa: {home_team_last_5_results}.
-                                    Últimos 5 jogos do visitante: {away_team_last_5_results}.
-                                    9. Temperatura da aposta:
-                                    - Considere que 0 indica extrema segurança e 1, extrema risco.
-                                    Temperatura escolhida: {bet_temperature}. Não mencione a temperatura, apenas use-a.
-                                    10. Além da aposta principal sugerida, se a temperatura estiver acima da média, 
-                                    ofereça opções adicionais mais arriscadas baseadas nas estatísticas de gols do JSON, 
-                                    sem mencionar a temperatura. Essas apostas adicionais devem estar em uma tabela 
-                                    separada, numerada. Se for uma sugestão de under/over gols para o jogo, mencione o jogo. 
-                                    se for uma sugestão de under/over gols para um time específico, mencione o time.
-                                    Temperatura 0, nenhuma sugestão extra. Temperatura em 0.5, uma ou duas sugestões.
-                                    Temperatua em 1, 3 ou mais sugestões.
-                                    11. Se o json mostra uma tendencia under gols, não sugira over.
-                                    Se o json mostra uma tendencia over gols, não sugira under.
-                                    12. Se a temperatura estiver muito alta, pode ousar nas sugestões, inclusive se a tendencia 
-                                    over gols, pode incrementar o over, e o mesmo para under. Exemplo:
-                                    se a tendência for under: -3.5 (tendência) -> tip: -2.5 gols.
-                                    se a tendência for over: +2.5 gols (tendência) -> tip +3,5 gols.
+                                    ### 1. Orientações para Resposta:
+
+                                    - **Linguagem**: Responda sempre no idioma selecionado: `{selected_language}`.
+                                    - **Personalização**: Dirija-se a mim pelo meu nome: `{user_name}` 
+                                    (se o nome não estiver disponível, ignore).
+                                    - **Especialização**: Você é um especialista em apostas online, focado em fornecer 
+                                    dicas valiosas com base nas informações disponíveis.
+                                    - **Confiança**: Responda com a confiança de um profissional experiente em apostas, 
+                                    alinhando sua resposta ao conteúdo fornecido.
+                                    - **Ambiente**: Mantenha um tom descontraído e destaque a aposta principal.
+                                    - **Cálculo de Aposta**: Apresente a aposta como resultado de uma análise cuidadosa, 
+                                    incluindo estatísticas relevantes na tabela. Mostre apenas as equipes mencionadas na 
+                                    aposta principal.
+
+                                    ## 2. Dicas de Apostas:
+                                    - Abaixo, apresente uma tabela com as equipes e, ao lado, as respectivas apostas.
+                                      
+                                      | Time             | Aposta                  |
+                                      |------------------|------------------------|
+                                      | Casa: `{home_team_name}`  | `sua_dica_para_a_aposta` |
+                                      | Visitante: `{away_team_name}` | `sua_dica_para_a_aposta` |
+                                      
+                                    - Com base no seguinte JSON, forneça sua dica:
+                                      `{str(predictions)}`
+                                    ## 3. Estatísticas Adicionais:
+                                    - Utilize as estatísticas adicionais para enriquecer sua resposta                                      
+                                      Considere as seguintes informações:
+                                      - Resultados dos últimos 5 jogos do time da casa: `{home_team_last_5_results}`.
+                                      - Resultados dos últimos 5 jogos do time visitante: `{away_team_last_5_results}`.
+                                      - Estatísticas do time da casa: `{stats_casa}` (dataframe).
+                                      - Estatísticas do time visitante: `{stats_fora}` (dataframe).
+                                    ## 4. Temperatura da Aposta:
+                                    - Utilize uma escala de 0 a 1, onde 0 representa segurança extrema e 1 representa 
+                                    risco extremo. A temperatura escolhida é `{bet_temperature}`. Não mencione a temperatura 
+                                    diretamente; apenas a aplique em suas sugestões.
+                                    
+                                    ## 5. Sugestões de Apostas Adicionais:
+                                    - Forneça pelo menos uma sugestão adicional de aposta. Se a temperatura for acima 
+                                    da média, ofereça opções mais arriscadas com base nas estatísticas. Apresente essas 
+                                    apostas em uma tabela separada, numerada. 
+                                    - Para sugestões de under/over gols, mencione o jogo se for geral e o time 
+                                    específico se for uma aposta focada.
+                                    
+                                      Exemplos de sugestões com base na temperatura:
+                                      - Temperatura 0: uma sugestão bastante segura.
+                                      - Temperatura 0.5: uma ou duas sugestões.
+                                      - Temperatura 1: três ou mais sugestões.
+                                    
+                                    ## 6. Tendências de Gols:
+                                    - Se os dados do JSON e das tabelas indicarem uma tendência de under gols, não 
+                                    sugira apostas de over. 
+                                    - Se indicarem uma tendência de over gols, evite sugerir under.
+                                    
+                                    ## 7. Ousadia nas Sugestões:
+                                    - Se a temperatura estiver alta, seja ousado nas sugestões. Se a tendência for over, 
+                                    considere incrementar a linha de gols. 
+                                      - Exemplos:
+                                        - Para uma tendência under de -3.5 gols, a sugestão pode ser -2.5 gols.
+                                        - Para uma tendência over de +2.5 gols, a sugestão pode ser +3.5 gols.
                                     """
                                 )
 
