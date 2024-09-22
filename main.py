@@ -11,6 +11,14 @@ from datetime import datetime
 # Inicializa o controlador de cookies
 controller = CookieController()
 
+while True:
+    try:
+        logged_in = controller.get('logged_in')
+        break
+    except:
+        logged_in = False
+        break
+
 def criar_tabelas():
     # Conecte-se aos bancos de dados usando os caminhos absolutos
     conn_credenciais = sqlite3.connect('credenciais.db')
@@ -693,13 +701,7 @@ def main_page(controller):
 
 
 def main():
-    while True:
-        try:
-            logged_in = controller.get('logged_in')
-            break
-        except:
-            logged_in = False
-            break
+    logged_in = controller.get('logged_in')
 
     print(f'Main: O logged_in é: {logged_in}')
 
