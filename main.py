@@ -693,10 +693,13 @@ def main_page(controller):
 
 
 def main():
-    try:
-        logged_in = controller.get('logged_in')
-    except KeyError:
-        logged_in = False
+    while True:
+        try:
+            logged_in = controller.get('logged_in')
+            break
+        except:
+            logged_in = False
+            break
 
     print(f'Main: O logged_in é: {logged_in}')
 
