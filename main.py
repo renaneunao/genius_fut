@@ -711,7 +711,8 @@ def main():
             criar_nova_conta()
     else:
         st.write('Primeiro login?')
-
+        controller.set('logged_in', False)
+        st.rerun()
 
 if __name__ == "__main__":
     main()
