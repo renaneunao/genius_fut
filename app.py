@@ -10,13 +10,21 @@ from datetime import datetime
 # Configurações do layout e tema
 st.set_page_config(page_title="IA BET", ) # layout="wide"
 
+# Obtenha o caminho absoluto do diretório do seu projeto
+base_dir = os.path.dirname(os.path.abspath(__file__))
+
 def main_page(controller):
     st.title("Tela Principal")
     controller.set('logged_in', True)
     if 'cliente_id' in st.session_state:
 
         # Conectar ao banco de dados
-        conn_clientes = sqlite3.connect('banco_sql/clientes.db')
+
+        # Construa o caminho absoluto para o banco de dados
+        db_path = os.path.join(base_dir, 'banco_sql', 'clientes.db')
+
+        # Conecte-se ao banco de dados usando o caminho absoluto
+        conn_clientes = sqlite3.connect(db_path)
         cursor = conn_clientes.cursor()
 
         cliente_id = st.session_state.cliente_id

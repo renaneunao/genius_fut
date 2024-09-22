@@ -1,12 +1,22 @@
 import streamlit as st
 import sqlite3
 from datetime import datetime
+import os
+
+# Obtenha o caminho absoluto do diretório do seu projeto
+base_dir = os.path.dirname(os.path.abspath(__file__))
 
 def criar_tabelas():
     # Conectando aos bancos de dados
-    conn_credenciais = sqlite3.connect('banco_sql/credenciais.db')
-    conn_clientes = sqlite3.connect('banco_sql/clientes.db')
-    conn_acesso = sqlite3.connect('banco_sql/acesso_cliente.db')
+    # Construa os caminhos absolutos para os bancos de dados
+    db_credenciais_path = os.path.join(base_dir, 'banco_sql', 'credenciais.db')
+    db_clientes_path = os.path.join(base_dir, 'banco_sql', 'clientes.db')
+    db_acesso_path = os.path.join(base_dir, 'banco_sql', 'acesso_cliente.db')
+
+    # Conecte-se aos bancos de dados usando os caminhos absolutos
+    conn_credenciais = sqlite3.connect(db_credenciais_path)
+    conn_clientes = sqlite3.connect(db_clientes_path)
+    conn_acesso = sqlite3.connect(db_acesso_path)
 
     # Criar tabela de credenciais
     conn_credenciais.execute('''CREATE TABLE IF NOT EXISTS credenciais (
