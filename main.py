@@ -709,6 +709,8 @@ def main():
             login(controller)  # Passa o controlador de cookies para a função de login
         elif opcao == "Criar Conta":
             criar_nova_conta()
+    else:
+        st.write('Primeiro login?')
 
 
 if __name__ == "__main__":
