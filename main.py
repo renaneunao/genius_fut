@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 import sqlite3
 from datetime import datetime
 
+# Inicializa o controlador de cookies
+controller = CookieController()
+
 def criar_tabelas():
     # Conecte-se aos bancos de dados usando os caminhos absolutos
     conn_credenciais = sqlite3.connect('credenciais.db')
@@ -690,11 +693,10 @@ def main_page(controller):
 
 
 def main():
-    # Inicializa o controlador de cookies
-    controller = CookieController()
-
-    # Verifica se o usuário está logado
-    logged_in = controller.get('logged_in')
+    try:
+        logged_in = controller.get('logged_in')
+    except KeyError:
+        logged_in = False
 
     print(f'Main: O logged_in é: {logged_in}')
 
