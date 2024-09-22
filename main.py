@@ -1,6 +1,11 @@
 import streamlit as st
 import sqlite3
 from streamlit_cookies_controller import CookieController
+import sys
+import os
+
+# Adiciona o diretório atual ao sys.path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from login import login, criar_nova_conta
 from app import main_page
 
