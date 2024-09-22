@@ -710,8 +710,9 @@ def main():
         elif opcao == "Criar Conta":
             criar_nova_conta()
     else:
-        st.write('Primeiro login?')
-
+        if st.button('Primeiro login?'):
+            controller.set('logged_in', False)
+            st.rerun()
 
 if __name__ == "__main__":
     main()
