@@ -8,21 +8,11 @@ from dotenv import load_dotenv
 import sqlite3
 from datetime import datetime
 
-# Obtenha o caminho absoluto do diretório do seu projeto
-base_dir = os.path.dirname(os.path.abspath(__file__))
-
-
 def criar_tabelas():
-    # Conectando aos bancos de dados
-    # Construa os caminhos absolutos para os bancos de dados
-    db_credenciais_path = os.path.join(base_dir, 'banco_sql', 'credenciais.db')
-    db_clientes_path = os.path.join(base_dir, 'banco_sql', 'clientes.db')
-    db_acesso_path = os.path.join(base_dir, 'banco_sql', 'acesso_cliente.db')
-
     # Conecte-se aos bancos de dados usando os caminhos absolutos
-    conn_credenciais = sqlite3.connect(db_credenciais_path)
-    conn_clientes = sqlite3.connect(db_clientes_path)
-    conn_acesso = sqlite3.connect(db_acesso_path)
+    conn_credenciais = sqlite3.connect('credenciais.db')
+    conn_clientes = sqlite3.connect('clientes.db')
+    conn_acesso = sqlite3.connect('acesso_cliente.db')
 
     # Criar tabela de credenciais
     conn_credenciais.execute('''CREATE TABLE IF NOT EXISTS credenciais (
@@ -62,8 +52,8 @@ def criar_tabelas():
 
 
 def criar_conta(usuario, senha, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep):
-    conn_credenciais = sqlite3.connect('banco_sql/credenciais.db')
-    conn_clientes = sqlite3.connect('banco_sql/clientes.db')
+    conn_credenciais = sqlite3.connect('credenciais.db')
+    conn_clientes = sqlite3.connect('clientes.db')
 
     try:
         # Verificar se o telefone já existe no banco de clientes
@@ -100,7 +90,7 @@ def criar_conta(usuario, senha, nome, telefone, data_nascimento, rua, numero, ba
 
 
 def verificar_login(usuario, senha):
-    conn = sqlite3.connect('banco_sql/credenciais.db')
+    conn = sqlite3.connect('credenciais.db')
     cursor = conn.cursor()
     cursor.execute('SELECT id FROM credenciais WHERE usuario = ? AND senha = ?', (usuario, senha))
     data = cursor.fetchone()
@@ -110,7 +100,7 @@ def verificar_login(usuario, senha):
 
 
 def verificar_acesso(cliente_id):
-    conn = sqlite3.connect('banco_sql/acesso_cliente.db')
+    conn = sqlite3.connect('acesso_cliente.db')
     cursor = conn.cursor()
     cursor.execute('SELECT data_limite, bypass FROM acesso_cliente WHERE cliente_id = ?', (cliente_id,))
     data = cursor.fetchone()
@@ -141,7 +131,7 @@ def login(controller):
         credenciais = verificar_login(usuario, senha)
         if credenciais:
             # Verificar se o cliente_id existe na tabela clientes
-            conn_clientes = sqlite3.connect('banco_sql/clientes.db')
+            conn_clientes = sqlite3.connect('clientes.db')
             cursor_clientes = conn_clientes.cursor()
             cursor_clientes.execute('SELECT id FROM clientes WHERE usuario = ?', (usuario,))
             cliente = cursor_clientes.fetchone()
@@ -197,14 +187,8 @@ def main_page(controller):
     st.title("Tela Principal")
     controller.set('logged_in', True)
     if 'cliente_id' in st.session_state:
-
-        # Conectar ao banco de dados
-
-        # Construa o caminho absoluto para o banco de dados
-        db_path = os.path.join(base_dir, 'banco_sql', 'clientes.db')
-
         # Conecte-se ao banco de dados usando o caminho absoluto
-        conn_clientes = sqlite3.connect(db_path)
+        conn_clientes = sqlite3.connect('clientes.db')
         cursor = conn_clientes.cursor()
 
         cliente_id = st.session_state.cliente_id
