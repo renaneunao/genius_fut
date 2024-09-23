@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 import mysql.connector
 
+administrador = 'Renan Barbosa Silva Vianna'
 
 def criar_tabelas():
     # Connect to the MySQL database using the provided credentials
@@ -192,7 +193,7 @@ def criar_nova_conta():
     confirmar_senha = st.text_input("Confirmar Senha", type='password')
     nome = st.text_input("Nome Completo")
     telefone = st.text_input("Telefone")
-    data_nascimento = st.date_input("Data de Nascimento")
+    data_nascimento = st.date_input("Data de Nascimento", format="DD/MM/YYYY")
 
     # Campos de endereço detalhado
     rua = st.text_input("Rua")
@@ -236,6 +237,7 @@ def main_page(controller):
         else:
             nome_cliente = ''
             st.write("Cliente não encontrado.")
+            st.write(f'Cliente ID na variável é: {st.session_state.cliente_id}')
 
         conn.close()
 
@@ -719,8 +721,138 @@ def main_page(controller):
                     st.write("Nenhuma liga encontrada para o país selecionado.")
         else:
             st.write("Nenhum país encontrado.")
+
+        if nome_cliente == administrador:
+            with st.sidebar.expander("Painel Administrador", expanded=True):
+                admin_page(controller)
     else:
         st.write("Você não está logado.")
+
+
+def admin_page(controller):
+    # Conectar ao banco de dados MySQL
+    conn = mysql.connector.connect(
+        host='sql10.freesqldatabase.com',
+        user='sql10732869',
+        password='rKCF2E9gIw',
+        database='sql10732869',
+        port=3306
+    )
+
+    cursor = conn.cursor()
+
+    # Título da página
+    st.title("Painel do Administrador")
+
+    # Opções de menu
+    menu = st.sidebar.selectbox("Escolha uma opção:", ["Listar Clientes", "Listar Credenciais", "Listar Acessos"])
+
+    if menu == "Listar Clientes":
+        st.subheader("Clientes")
+
+        # Listar clientes
+        cursor.execute(
+            "SELECT id, usuario, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep FROM clientes")
+        clientes = cursor.fetchall()
+        df_clientes = pd.DataFrame(clientes,
+                                   columns=["ID", "Usuário", "Nome", "Telefone", "Data de Nascimento", "Rua", "Número",
+                                            "Bairro", "Cidade", "Estado", "País", "CEP"])
+
+        # Exibir a lista de clientes
+        st.dataframe(df_clientes)
+
+        # Selecionar cliente para edição
+        cliente_id = st.selectbox("Selecione o ID do cliente para editar:", df_clientes["ID"])
+
+        if cliente_id:
+            # Consultar informações do cliente selecionado
+            cursor.execute("SELECT * FROM clientes WHERE id = %s", (cliente_id,))
+            cliente = cursor.fetchone()
+
+            # Formulário para editar informações do cliente
+            nome = st.text_input("Nome", value=cliente[2])
+            telefone = st.text_input("Telefone", value=cliente[3])
+            data_nascimento = st.date_input("Data de Nascimento", value=cliente[4], format="DD/MM/YYYY")
+            rua = st.text_input("Rua", value=cliente[5])
+            numero = st.text_input("Número", value=cliente[6])
+            bairro = st.text_input("Bairro", value=cliente[7])
+            cidade = st.text_input("Cidade", value=cliente[8])
+            estado = st.text_input("Estado", value=cliente[9])
+            pais = st.text_input("País", value=cliente[10])
+            cep = st.text_input("CEP", value=cliente[11])
+
+            if st.button("Salvar"):
+                cursor.execute("""
+                    UPDATE clientes 
+                    SET nome = %s, telefone = %s, data_nascimento = %s, rua = %s, numero = %s, 
+                        bairro = %s, cidade = %s, estado = %s, pais = %s, cep = %s 
+                    WHERE id = %s
+                """, (nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep, cliente_id))
+                conn.commit()
+                st.success("Cliente atualizado com sucesso!")
+
+    elif menu == "Listar Credenciais":
+        st.subheader("Credenciais")
+
+        # Listar credenciais
+        cursor.execute("SELECT id, usuario FROM credenciais")
+        credenciais = cursor.fetchall()
+        df_credenciais = pd.DataFrame(credenciais, columns=["ID", "Usuário"])
+
+        # Exibir a lista de credenciais
+        st.dataframe(df_credenciais)
+
+        # Selecionar credencial para edição
+        credencial_id = st.selectbox("Selecione o ID da credencial para editar:", df_credenciais["ID"])
+
+        if credencial_id:
+            # Consultar informações da credencial selecionada
+            cursor.execute("SELECT * FROM credenciais WHERE id = %s", (credencial_id,))
+            credencial = cursor.fetchone()
+
+            # Formulário para editar informações da credencial
+            usuario = st.text_input("Usuário", value=credencial[1])
+            senha = st.text_input("Senha", value=credencial[2], type="password")
+
+            if st.button("Salvar"):
+                cursor.execute("UPDATE credenciais SET usuario = %s, senha = %s WHERE id = %s",
+                               (usuario, senha, credencial_id))
+                conn.commit()
+                st.success("Credencial atualizada com sucesso!")
+
+    elif menu == "Listar Acessos":
+        st.subheader("Acessos dos Clientes")
+
+        # Listar acessos
+        cursor.execute(
+            "SELECT ac.cliente_id, c.nome, ac.data_limite, ac.bypass FROM acesso_cliente ac JOIN clientes c ON ac.cliente_id = c.id")
+        acessos = cursor.fetchall()
+        df_acessos = pd.DataFrame(acessos, columns=["ID do Cliente", "Nome", "Data Limite", "Bypass"])
+
+        # Exibir a lista de acessos
+        st.dataframe(df_acessos)
+
+        # Selecionar acesso para edição
+        acesso_cliente_id = st.selectbox("Selecione o ID do cliente para editar acesso:", df_acessos["ID do Cliente"])
+
+        if acesso_cliente_id:
+            # Consultar informações do acesso selecionado
+            cursor.execute("SELECT * FROM acesso_cliente WHERE cliente_id = %s", (acesso_cliente_id,))
+            acesso = cursor.fetchone()
+
+            # Formulário para editar informações do acesso
+            data_limite = st.date_input("Data Limite", value=acesso[1], format="DD/MM/YYYY")
+            bypass = st.number_input("Bypass", value=acesso[2], min_value=0)
+
+            if st.button("Salvar"):
+                cursor.execute("UPDATE acesso_cliente SET data_limite = %s, bypass = %s WHERE cliente_id = %s",
+                               (data_limite, bypass, acesso_cliente_id))
+                conn.commit()
+                st.success("Acesso atualizado com sucesso!")
+
+    # Fechar o cursor e a conexão
+    cursor.close()
+    conn.close()
 
 
 def main():
@@ -734,6 +866,7 @@ def main():
 
     if logged_in is True:
         st.session_state.cliente_id = controller.get('cliente_id')
+        st.write(f'O cliente ID da MAIN é {controller.get('cliente_id')}')
         main_page(controller)
     elif logged_in is False:
         st.sidebar.title("Menu")
@@ -743,6 +876,7 @@ def main():
             login(controller)  # Passa o controlador de cookies para a função de login
         elif opcao == "Criar Conta":
             criar_nova_conta()
+
     else:
         if st.button('Primeiro login?'):
             controller.set('logged_in', False)
