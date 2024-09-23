@@ -5,94 +5,110 @@ import pandas as pd
 from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
-import sqlite3
 from datetime import datetime
+import mysql.connector
+
 
 def criar_tabelas():
-    # Conecte-se aos bancos de dados usando os caminhos absolutos
-    conn_credenciais = sqlite3.connect('credenciais.db')
-    conn_clientes = sqlite3.connect('clientes.db')
-    conn_acesso = sqlite3.connect('acesso_cliente.db')
+    # Connect to the MySQL database using the provided credentials
+    conn = mysql.connector.connect(
+        host='sql10.freesqldatabase.com',
+        user='sql10732869',
+        password='rKCF2E9gIw',
+        database='sql10732869',
+        port=3306
+    )
+    cursor = conn.cursor()
 
-    # Criar tabela de credenciais
-    conn_credenciais.execute('''CREATE TABLE IF NOT EXISTS credenciais (
-                                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                usuario TEXT UNIQUE,
-                                senha TEXT)''')
+    # Create table for credentials
+    cursor.execute('''CREATE TABLE IF NOT EXISTS credenciais (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        usuario VARCHAR(255) UNIQUE,
+        senha VARCHAR(255)
+    )''')
 
-    # Criar tabela de clientes com campos detalhados de endereço
-    conn_clientes.execute('''CREATE TABLE IF NOT EXISTS clientes (
-                                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                usuario TEXT UNIQUE,
-                                nome TEXT,
-                                telefone TEXT UNIQUE,
-                                data_nascimento DATE,
-                                rua TEXT,
-                                numero TEXT,
-                                bairro TEXT,
-                                cidade TEXT,
-                                estado TEXT,
-                                pais TEXT,
-                                cep TEXT)''')
+    # Create table for clients with detailed address fields
+    cursor.execute('''CREATE TABLE IF NOT EXISTS clientes (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        usuario VARCHAR(255) UNIQUE,
+        nome VARCHAR(255),
+        telefone VARCHAR(20) UNIQUE,
+        data_nascimento DATE,
+        rua VARCHAR(255),
+        numero VARCHAR(10),
+        bairro VARCHAR(255),
+        cidade VARCHAR(255),
+        estado VARCHAR(255),
+        pais VARCHAR(255),
+        cep VARCHAR(10)
+    )''')
 
-    # Criar tabela de acesso cliente
-    conn_acesso.execute('''CREATE TABLE IF NOT EXISTS acesso_cliente (
-                                cliente_id INTEGER,
-                                data_limite DATE,
-                                bypass INTEGER,
-                                FOREIGN KEY (cliente_id) REFERENCES clientes (id))''')
+    # Create table for client access
+    cursor.execute('''CREATE TABLE IF NOT EXISTS acesso_cliente (
+        cliente_id INT,
+        data_limite DATE,
+        bypass INT,
+        FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE
+    )''')
 
-    conn_credenciais.commit()
-    conn_clientes.commit()
-    conn_acesso.commit()
-
-    conn_credenciais.close()
-    conn_clientes.close()
-    conn_acesso.close()
+    # Commit the changes to the database
+    conn.commit()
+    cursor.close()
+    conn.close()
 
 
 def criar_conta(usuario, senha, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep):
-    conn_credenciais = sqlite3.connect('credenciais.db')
-    conn_clientes = sqlite3.connect('clientes.db')
-
+    conn = mysql.connector.connect(
+        host='sql10.freesqldatabase.com',
+        user='sql10732869',
+        password='rKCF2E9gIw',
+        database='sql10732869',
+        port=3306
+    )
+    cursor = conn.cursor()
     try:
         # Verificar se o telefone já existe no banco de clientes
-        cursor_clientes = conn_clientes.cursor()
-        cursor_clientes.execute('SELECT * FROM clientes WHERE telefone = ?', (telefone,))
-        if cursor_clientes.fetchone():
+        cursor.execute('SELECT * FROM clientes WHERE telefone = %s', (telefone,))
+        if cursor.fetchone():
             st.error("Já existe uma conta com este número de telefone.")
             return
 
         # Verificar se o usuário já existe no banco de credenciais
-        cursor_credenciais = conn_credenciais.cursor()
-        cursor_credenciais.execute('SELECT * FROM credenciais WHERE usuario = ?', (usuario,))
-        if cursor_credenciais.fetchone():
+        cursor.execute('SELECT * FROM credenciais WHERE usuario = %s', (usuario,))
+        if cursor.fetchone():
             st.error("Já existe uma conta com este nome de usuário.")
             return
 
         # Inserir credenciais
-        conn_credenciais.execute('INSERT INTO credenciais (usuario, senha) VALUES (?, ?)', (usuario, senha))
-        conn_credenciais.commit()
+        cursor.execute('INSERT INTO credenciais (usuario, senha) VALUES (%s, %s)', (usuario, senha))
 
         # Inserir informações pessoais no banco de clientes
-        conn_clientes.execute('''INSERT INTO clientes (usuario, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep)
-                                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                              (usuario, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep))
-        conn_clientes.commit()
+        cursor.execute('''INSERT INTO clientes (usuario, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep) 
+                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
+                       (usuario, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep))
+
+        conn.commit()
         st.success("Conta criada com sucesso!")
-    except sqlite3.IntegrityError as e:
+
+    except mysql.connector.IntegrityError as e:
         st.error(f"Erro de integridade ao criar conta: {str(e)}")
     except Exception as e:
-        st.error(f"Erro inesperado: {str(e)}")  # Captura outros erros
+        st.error(f"Erro inesperado: {str(e)}")
     finally:
-        conn_credenciais.close()
-        conn_clientes.close()
+        cursor.close()
+        conn.close()
 
 
 def verificar_login(usuario, senha):
-    conn = sqlite3.connect('credenciais.db')
+    conn = mysql.connector.connect(
+        host='sql10.freesqldatabase.com',
+        user='sql10732869',
+        password='rKCF2E9gIw',
+        database='sql10732869',
+        port=3306
+    )
     cursor = conn.cursor()
-    cursor.execute('SELECT id FROM credenciais WHERE usuario = ? AND senha = ?', (usuario, senha))
+    cursor.execute('SELECT id FROM credenciais WHERE usuario = %s AND senha = %s', (usuario, senha))
     data = cursor.fetchone()
     conn.close()
 
@@ -100,9 +116,15 @@ def verificar_login(usuario, senha):
 
 
 def verificar_acesso(cliente_id):
-    conn = sqlite3.connect('acesso_cliente.db')
+    conn = mysql.connector.connect(
+        host='sql10.freesqldatabase.com',
+        user='sql10732869',
+        password='rKCF2E9gIw',
+        database='sql10732869',
+        port=3306
+    )
     cursor = conn.cursor()
-    cursor.execute('SELECT data_limite, bypass FROM acesso_cliente WHERE cliente_id = ?', (cliente_id,))
+    cursor.execute('SELECT data_limite, bypass FROM acesso_cliente WHERE cliente_id = %s', (cliente_id,))
     data = cursor.fetchone()
     conn.close()
 
@@ -130,12 +152,17 @@ def login(controller):
         print(f"Tentando login com usuário: {usuario}")  # Print para depuração
         credenciais = verificar_login(usuario, senha)
         if credenciais:
-            # Verificar se o cliente_id existe na tabela clientes
-            conn_clientes = sqlite3.connect('clientes.db')
-            cursor_clientes = conn_clientes.cursor()
-            cursor_clientes.execute('SELECT id FROM clientes WHERE usuario = ?', (usuario,))
+            conn = mysql.connector.connect(
+                host='sql10.freesqldatabase.com',
+                user='sql10732869',
+                password='rKCF2E9gIw',
+                database='sql10732869',
+                port=3306
+            )
+            cursor_clientes = conn.cursor()
+            cursor_clientes.execute('SELECT id FROM clientes WHERE usuario = %s', (usuario,))
             cliente = cursor_clientes.fetchone()
-            conn_clientes.close()
+            conn.close()
 
             if cliente:
                 cliente_id = cliente[0]
@@ -186,14 +213,21 @@ def criar_nova_conta():
 def main_page(controller):
     st.title("Tela Principal")
     controller.set('logged_in', True)
+
     if 'cliente_id' in st.session_state:
-        # Conecte-se ao banco de dados usando o caminho absoluto
-        conn_clientes = sqlite3.connect('clientes.db')
-        cursor = conn_clientes.cursor()
+        conn = mysql.connector.connect(
+            host='sql10.freesqldatabase.com',
+            user='sql10732869',
+            password='rKCF2E9gIw',
+            database='sql10732869',
+            port=3306
+        )
+        cursor = conn.cursor()
 
         cliente_id = st.session_state.cliente_id
 
-        cursor.execute("SELECT nome FROM clientes WHERE id = ?", (cliente_id,))
+        # Usar %s como placeholder no MySQL
+        cursor.execute("SELECT nome FROM clientes WHERE id = %s", (cliente_id,))
         cliente = cursor.fetchone()
 
         if cliente:  # Verifica se o cliente não é None
@@ -203,7 +237,7 @@ def main_page(controller):
             nome_cliente = ''
             st.write("Cliente não encontrado.")
 
-        conn_clientes.close()
+        conn.close()
 
         # Carregar a chave da API do OpenAI do arquivo .env
         load_dotenv()
