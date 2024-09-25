@@ -5,10 +5,16 @@ import pandas as pd
 from langchain_openai import ChatOpenAI
 import os
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 import mysql.connector
+from PIL import Image, ImageDraw
+
 
 administrador = 'Renan Barbosa Silva Vianna'
+dias_acesso = 3
+
+st.set_page_config(page_title="GeniusFut", page_icon="💫")
+
 
 def criar_tabelas():
     # Connect to the MySQL database using the provided credentials
@@ -35,13 +41,7 @@ def criar_tabelas():
         nome VARCHAR(255),
         telefone VARCHAR(20) UNIQUE,
         data_nascimento DATE,
-        rua VARCHAR(255),
-        numero VARCHAR(10),
-        bairro VARCHAR(255),
-        cidade VARCHAR(255),
-        estado VARCHAR(255),
         pais VARCHAR(255),
-        cep VARCHAR(10)
     )''')
 
     # Create table for client access
@@ -58,7 +58,35 @@ def criar_tabelas():
     conn.close()
 
 
-def criar_conta(usuario, senha, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep):
+def criar_nova_conta():
+    st.title("Criar Nova Conta")
+
+    # Inputs do usuário
+    usuario = st.text_input("Usuário")
+    senha = st.text_input("Senha", type='password')
+    confirmar_senha = st.text_input("Confirmar Senha", type='password')
+    nome = st.text_input("Nome Completo")
+    telefone = st.text_input("Telefone")
+    data_nascimento = st.date_input("Data de Nascimento", format="DD/MM/YYYY")
+    pais = st.text_input("País")
+
+    # Validação ao clicar no botão "Criar Conta"
+    if st.button("Criar Conta"):
+        # Verificar se todos os campos estão preenchidos
+        if not usuario or not senha or not confirmar_senha or not nome or not telefone or not data_nascimento or not pais:
+            st.error("Todos os campos são obrigatórios!")
+            return
+
+        # Verificar se as senhas correspondem
+        if senha != confirmar_senha:
+            st.error("As senhas não correspondem!")
+            return
+
+        # Se as validações passarem, criar a conta
+        criar_conta(usuario, senha, nome, telefone, data_nascimento, pais)
+
+
+def criar_conta(usuario, senha, nome, telefone, data_nascimento, pais):
     conn = mysql.connector.connect(
         host='sql10.freesqldatabase.com',
         user='sql10732869',
@@ -84,9 +112,19 @@ def criar_conta(usuario, senha, nome, telefone, data_nascimento, rua, numero, ba
         cursor.execute('INSERT INTO credenciais (usuario, senha) VALUES (%s, %s)', (usuario, senha))
 
         # Inserir informações pessoais no banco de clientes
-        cursor.execute('''INSERT INTO clientes (usuario, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep) 
-                          VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)''',
-                       (usuario, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep))
+        cursor.execute('''INSERT INTO clientes (usuario, nome, telefone, data_nascimento, pais) 
+                          VALUES (%s, %s, %s, %s, %s)''',
+                       (usuario, nome, telefone, data_nascimento, pais))
+
+        # Obter o ID do cliente recém inserido
+        cliente_id = cursor.lastrowid
+
+        # Calcular a data limite para o acesso do cliente
+        data_limite = datetime.today() + timedelta(days=dias_acesso)
+
+        # Inserir registro de acesso do cliente
+        cursor.execute('INSERT INTO acesso_cliente (cliente_id, data_limite, bypass) VALUES (%s, %s, %s)',
+                       (cliente_id, data_limite, 0))
 
         conn.commit()
         st.success("Conta criada com sucesso!")
@@ -139,12 +177,28 @@ def verificar_acesso(cliente_id):
     return False
 
 
+def add_rounded_corners(image_path, radius):
+    img = Image.open(image_path).convert("RGBA")
+
+    # Criar uma máscara
+    mask = Image.new("L", img.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.rounded_rectangle((0, 0, img.size[0], img.size[1]), radius=radius, fill=255)
+
+    # Aplicar a máscara à imagem
+    rounded_img = Image.new("RGBA", img.size)
+    rounded_img.paste(img, (0, 0), mask)
+
+    return rounded_img
+
+
 def login(controller):
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
     print(f'Login: O logged_in é: {logged_in}')
     if logged_in == False:
         controller.set('logged_in', False)
+
     st.title("Login")
     usuario = st.text_input("Usuário")
     senha = st.text_input("Senha", type='password')
@@ -163,56 +217,51 @@ def login(controller):
             cursor_clientes = conn.cursor()
             cursor_clientes.execute('SELECT id FROM clientes WHERE usuario = %s', (usuario,))
             cliente = cursor_clientes.fetchone()
-            conn.close()
 
             if cliente:
                 cliente_id = cliente[0]
-                if verificar_acesso(cliente_id):
-                    st.write(f'Já verifiquei o acesso')
-                    st.session_state.cliente_id = cliente_id  # Armazenar cliente_id na sessão
-                    st.success("Login bem-sucedido! Bem-vindo à tela principal.")
+                cursor_acessos = conn.cursor()
+                cursor_acessos.execute('SELECT data_limite, bypass FROM acesso_cliente WHERE cliente_id = %s',
+                                       (cliente_id,))
+                acesso = cursor_acessos.fetchone()
 
-                    # Armazena os cookies
-                    controller.set('logged_in', True)
-                    controller.set('cliente_id', cliente_id)
-                    print('Settando logged_in como True')
+                conn.close()  # Fechar a conexão após obter os dados
 
-                    st.rerun()  # Redireciona após login
+                if acesso:
+                    data_limite, bypass = acesso
+                    print(f"Data Limite: {data_limite}, Bypass: {bypass}")  # Print para depuração
+
+                    controller.set('data_limite',
+                                   data_limite.strftime('%Y-%m-%d'))  # Converter para string no formato ISO
+
+                    controller.set('bypass', bypass)
+
+                    # Verificar se a data limite é menor que hoje e o bypass é zero
+                    if data_limite < datetime.now().date() and bypass == 0:
+                        st.error("Acesso negado. É necessário comprar uma licença.")
+                    else:
+                        if verificar_acesso(cliente_id):
+                            st.session_state.cliente_id = cliente_id  # Armazenar cliente_id na sessão
+                            st.success("Login bem-sucedido! Bem-vindo à tela principal.")
+
+                            # Armazena os cookies
+                            controller.set('logged_in', True)
+                            controller.set('cliente_id', cliente_id)
+                            print('Settando logged_in como True')
+
+                            st.rerun()  # Redireciona após login
+                        else:
+                            st.error("Acesso negado. Verifique a data limite ou contate o suporte.")
                 else:
-                    st.error("Acesso negado. Verifique a data limite ou contate o suporte.")
+                    st.error("Nenhum acesso encontrado para este cliente.")
             else:
                 st.error("Cliente não encontrado.")
         else:
             st.error("Usuário ou senha incorretos.")
 
-def criar_nova_conta():
-    st.title("Criar Nova Conta")
-
-    usuario = st.text_input("Usuário")
-    senha = st.text_input("Senha", type='password')
-    confirmar_senha = st.text_input("Confirmar Senha", type='password')
-    nome = st.text_input("Nome Completo")
-    telefone = st.text_input("Telefone")
-    data_nascimento = st.date_input("Data de Nascimento", format="DD/MM/YYYY")
-
-    # Campos de endereço detalhado
-    rua = st.text_input("Rua")
-    numero = st.text_input("Número")
-    bairro = st.text_input("Bairro")
-    cidade = st.text_input("Cidade")
-    estado = st.text_input("Estado")
-    pais = st.text_input("País")
-    cep = st.text_input("CEP")
-
-    if st.button("Criar Conta"):
-        if senha != confirmar_senha:
-            st.error("As senhas não correspondem!")
-        else:
-            criar_conta(usuario, senha, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep)
-
 
 def main_page(controller):
-    st.title("Tela Principal")
+    st.title("GeniusFut")
     controller.set('logged_in', True)
 
     if 'cliente_id' in st.session_state:
@@ -227,6 +276,7 @@ def main_page(controller):
 
         cliente_id = st.session_state.cliente_id
 
+
         # Usar %s como placeholder no MySQL
         cursor.execute("SELECT nome FROM clientes WHERE id = %s", (cliente_id,))
         cliente = cursor.fetchone()
@@ -237,7 +287,6 @@ def main_page(controller):
         else:
             nome_cliente = ''
             st.write("Cliente não encontrado.")
-            st.write(f'Cliente ID na variável é: {st.session_state.cliente_id}')
 
         conn.close()
 
@@ -372,11 +421,11 @@ def main_page(controller):
         st.sidebar.write(f"Horários de {default_timezone}")
 
         # Criar um layout de colunas para o botão de sair e trocar timezone
-        col1, col2 = st.sidebar.columns(2)
+        col1, col2, col3 = st.sidebar.columns(3)
 
         # Adiciona o botão para trocar timezone
         with col1:
-            if st.button("Trocar timezone"):
+            if st.button("🔄 Timezone"):
                 selected_timezone = st.selectbox("Selecione o timezone:", timezones,
                                                  index=timezones.index(default_timezone))
             else:
@@ -396,6 +445,50 @@ def main_page(controller):
                 # Redirecionar para a página de login
                 st.success("Você saiu da conta.")
                 st.rerun()
+
+        # Adiciona a coluna para exibir a data de vencimento
+        with col3:
+            # Aqui você deve obter a data de vencimento do usuário, por exemplo, a partir do controller
+            data_vencimento = controller.get('data_limite')  # Supondo que a data limite foi salva no controller
+
+            # Verifique se data_vencimento é um objeto datetime ou date
+            if isinstance(data_vencimento, str):
+                # Se for uma string, tente converter para datetime
+                try:
+                    data_vencimento = datetime.strptime(data_vencimento,
+                                                        '%Y-%m-%d')  # Altere o formato conforme necessário
+                except ValueError:
+                    st.error("Formato de data inválido.")
+                    data_vencimento = None  # Para evitar erros posteriores
+
+            # Se data_vencimento ainda for None, não execute a seguinte linha
+            if data_vencimento is not None:
+                st.markdown(
+                    f"<span style='font-size: 12px;'>📅 Vencimento: {data_vencimento.strftime('%d/%m/%Y')}</span>",
+                    unsafe_allow_html=True)
+            else:
+                st.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
+                            unsafe_allow_html=True)
+
+
+        # Use a função para adicionar bordas arredondadas à imagem
+        rounded_image = add_rounded_corners('logo_genius_fut.jpg', radius=50)
+
+        # CSS para redimensionar a imagem
+        st.sidebar.markdown(
+            """
+            <style>
+            .sidebar-image {
+                max-width: 100%; /* A imagem ocupará 100% da largura disponível */
+                height: auto; /* A altura será ajustada automaticamente */
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Exibir a imagem na sidebar
+        st.sidebar.image(rounded_image, use_column_width=True)
 
         date = st.sidebar.date_input("Selecione a data:", pd.to_datetime('today'), format="DD/MM/YYYY")
 
@@ -724,12 +817,12 @@ def main_page(controller):
 
         if nome_cliente == administrador:
             with st.sidebar.expander("Painel Administrador", expanded=True):
-                admin_page(controller)
+                admin_page()
     else:
         st.write("Você não está logado.")
 
 
-def admin_page(controller):
+def admin_page():
     # Conectar ao banco de dados MySQL
     conn = mysql.connector.connect(
         host='sql10.freesqldatabase.com',
@@ -752,11 +845,10 @@ def admin_page(controller):
 
         # Listar clientes
         cursor.execute(
-            "SELECT id, usuario, nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep FROM clientes")
+            "SELECT id, usuario, nome, telefone, data_nascimento, pais FROM clientes")
         clientes = cursor.fetchall()
         df_clientes = pd.DataFrame(clientes,
-                                   columns=["ID", "Usuário", "Nome", "Telefone", "Data de Nascimento", "Rua", "Número",
-                                            "Bairro", "Cidade", "Estado", "País", "CEP"])
+                                   columns=["ID", "Usuário", "Nome", "Telefone", "Data de Nascimento", "País"])
 
         # Exibir a lista de clientes
         st.dataframe(df_clientes)
@@ -773,21 +865,14 @@ def admin_page(controller):
             nome = st.text_input("Nome", value=cliente[2])
             telefone = st.text_input("Telefone", value=cliente[3])
             data_nascimento = st.date_input("Data de Nascimento", value=cliente[4], format="DD/MM/YYYY")
-            rua = st.text_input("Rua", value=cliente[5])
-            numero = st.text_input("Número", value=cliente[6])
-            bairro = st.text_input("Bairro", value=cliente[7])
-            cidade = st.text_input("Cidade", value=cliente[8])
-            estado = st.text_input("Estado", value=cliente[9])
-            pais = st.text_input("País", value=cliente[10])
-            cep = st.text_input("CEP", value=cliente[11])
+            pais = st.text_input("País", value=cliente[5])  # Corrigido índice para 'pais'
 
             if st.button("Salvar"):
                 cursor.execute("""
                     UPDATE clientes 
-                    SET nome = %s, telefone = %s, data_nascimento = %s, rua = %s, numero = %s, 
-                        bairro = %s, cidade = %s, estado = %s, pais = %s, cep = %s 
+                    SET nome = %s, telefone = %s, data_nascimento = %s, pais = %s,  
                     WHERE id = %s
-                """, (nome, telefone, data_nascimento, rua, numero, bairro, cidade, estado, pais, cep, cliente_id))
+                """, (nome, telefone, data_nascimento, pais, cliente_id))
                 conn.commit()
                 st.success("Cliente atualizado com sucesso!")
 
@@ -862,7 +947,6 @@ def admin_page(controller):
         conn.close()
 
 
-
 def main():
     # Inicializa o controlador de cookies
     controller = CookieController()
@@ -872,9 +956,25 @@ def main():
 
     print(f'Main: O logged_in é: {logged_in}')
 
+    # Obtem a data de vencimento do controlador de cookies
+    data_vencimento = controller.get('data_limite')  # Supondo que você tenha armazenado a data de vencimento aqui
+
+    if isinstance(data_vencimento, str):
+        try:
+            data_vencimento = datetime.strptime(data_vencimento, '%Y-%m-%d')  # Ajuste o formato conforme necessário
+        except ValueError:
+            st.error("Formato de data inválido.")
+            data_vencimento = None
+
+    # Verifica se a data de vencimento é menor que a data atual
+    if data_vencimento is not None and data_vencimento < datetime.today():
+        st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
+        controller.set('logged_in', False)  # Redefine o estado de login
+        st.rerun()  # Redireciona para a tela de login
+
     if logged_in is True:
         st.session_state.cliente_id = controller.get('cliente_id')
-        st.write(f'O cliente ID da MAIN é {controller.get('cliente_id')}')
+        # st.write(f'O cliente ID da MAIN é {controller.get('cliente_id')}')
         main_page(controller)
     elif logged_in is False:
         st.sidebar.title("Menu")
@@ -889,6 +989,7 @@ def main():
         if st.button('Primeiro login?'):
             controller.set('logged_in', False)
             st.rerun()
+
 
 if __name__ == "__main__":
     main()
