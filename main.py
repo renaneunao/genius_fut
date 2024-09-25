@@ -170,7 +170,13 @@ def verificar_acesso(cliente_id):
     if data:
         data_limite, bypass = data
         hoje = datetime.now().date()
-        if bypass or datetime.strptime(data_limite, "%Y-%m-%d").date() >= hoje:
+
+        # Verifica se data_limite é uma string antes de tentar converter
+        if isinstance(data_limite, str):
+            data_limite = datetime.strptime(data_limite, "%Y-%m-%d").date()  # Converte string para date
+
+        # Agora você pode comparar diretamente
+        if bypass or data_limite >= hoje:
             return True
         else:
             return False
