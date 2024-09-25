@@ -821,34 +821,47 @@ def admin_page(controller):
                 st.success("Credencial atualizada com sucesso!")
 
     elif menu == "Listar Acessos":
-        st.subheader("Acessos dos Clientes")
+    st.subheader("Acessos dos Clientes")
 
-        # Listar acessos
-        cursor.execute(
-            "SELECT ac.cliente_id, c.nome, ac.data_limite, ac.bypass FROM acesso_cliente ac JOIN clientes c ON ac.cliente_id = c.id")
-        acessos = cursor.fetchall()
-        df_acessos = pd.DataFrame(acessos, columns=["ID do Cliente", "Nome", "Data Limite", "Bypass"])
+    # Listar acessos
+    cursor.execute(
+        "SELECT ac.cliente_id, c.nome, ac.data_limite, ac.bypass FROM acesso_cliente ac JOIN clientes c ON ac.cliente_id = c.id")
+    acessos = cursor.fetchall()
+    df_acessos = pd.DataFrame(acessos, columns=["ID do Cliente", "Nome", "Data Limite", "Bypass"])
 
-        # Exibir a lista de acessos
-        st.dataframe(df_acessos)
+    # Exibir a lista de acessos
+    st.dataframe(df_acessos)
 
-        # Selecionar acesso para edição
-        acesso_cliente_id = st.selectbox("Selecione o ID do cliente para editar acesso:", df_acessos["ID do Cliente"])
+    # Selecionar acesso para edição
+    acesso_cliente_id = st.selectbox("Selecione o ID do cliente para editar acesso:", df_acessos["ID do Cliente"])
 
-        if acesso_cliente_id:
-            # Consultar informações do acesso selecionado
-            cursor.execute("SELECT * FROM acesso_cliente WHERE cliente_id = %s", (acesso_cliente_id,))
-            acesso = cursor.fetchone()
+    if acesso_cliente_id:
+        # Consultar informações do acesso selecionado
+        cursor.execute("SELECT * FROM acesso_cliente WHERE cliente_id = %s", (acesso_cliente_id,))
+        acesso = cursor.fetchone()
 
-            # Formulário para editar informações do acesso
-            data_limite = st.date_input("Data Limite", value=acesso[1], format="DD/MM/YYYY")
-            bypass = st.number_input("Bypass", value=acesso[2], min_value=0)
+        # Formulário para editar informações do acesso
+        data_limite = st.date_input("Data Limite", value=acesso[1], format="DD/MM/YYYY")
+        bypass = st.number_input("Bypass", value=acesso[2], min_value=0)
 
-            if st.button("Salvar"):
-                cursor.execute("UPDATE acesso_cliente SET data_limite = %s, bypass = %s WHERE cliente_id = %s",
-                               (data_limite, bypass, acesso_cliente_id))
-                conn.commit()
-                st.success("Acesso atualizado com sucesso!")
+        if st.button("Salvar"):
+            cursor.execute("UPDATE acesso_cliente SET data_limite = %s, bypass = %s WHERE cliente_id = %s",
+                           (data_limite, bypass, acesso_cliente_id))
+            conn.commit()
+            st.success("Acesso atualizado com sucesso!")
+
+    # Formulário para criar um novo acesso
+    st.subheader("Criar Novo Acesso")
+    novo_cliente_id = st.selectbox("Selecione o ID do Cliente:", df_acessos["ID do Cliente"].unique())
+    nova_data_limite = st.date_input("Data Limite para Novo Acesso", format="DD/MM/YYYY")
+    novo_bypass = st.number_input("Bypass para Novo Acesso", min_value=0)
+
+    if st.button("Criar Acesso"):
+        cursor.execute("INSERT INTO acesso_cliente (cliente_id, data_limite, bypass) VALUES (%s, %s, %s)",
+                       (novo_cliente_id, nova_data_limite, novo_bypass))
+        conn.commit()
+        st.success("Novo acesso criado com sucesso!")
+
 
     # Fechar o cursor e a conexão
     cursor.close()
