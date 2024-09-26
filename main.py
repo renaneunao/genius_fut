@@ -15,6 +15,9 @@ dias_acesso = 3
 
 st.set_page_config(page_title="GeniusFut", page_icon="💫")
 
+# Inicializa o controlador de cookies
+controller = CookieController()
+
 
 def criar_tabelas():
     # Connect to the MySQL database using the provided credentials
@@ -201,16 +204,15 @@ def add_rounded_corners(image_path, radius):
 def login(controller):
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
-    print(f'Login: O logged_in é: {logged_in}')
-    if logged_in == False:
-        controller.set('logged_in', False)
+    # print(f'Login: O logged_in é: {logged_in}')
+    if not logged_in:
+        controller.set('logged_in', False, 'ck_logged_in')
 
     st.title("Login")
     usuario = st.text_input("Usuário")
     senha = st.text_input("Senha", type='password')
 
     if st.button("Entrar"):
-        print(f"Tentando login com usuário: {usuario}")  # Print para depuração
         credenciais = verificar_login(usuario, senha)
         if credenciais:
             conn = mysql.connector.connect(
@@ -235,8 +237,6 @@ def login(controller):
 
                 if acesso:
                     data_limite, bypass = acesso
-                    print(f"Data Limite: {data_limite}, Bypass: {bypass}")  # Print para depuração
-
                     controller.set('data_limite',
                                    data_limite.strftime('%Y-%m-%d'))  # Converter para string no formato ISO
 
@@ -247,15 +247,13 @@ def login(controller):
                         st.error("Acesso negado. É necessário comprar uma licença.")
                     else:
                         if verificar_acesso(cliente_id):
-                            st.session_state.cliente_id = cliente_id  # Armazenar cliente_id na sessão
                             st.success("Login bem-sucedido! Bem-vindo à tela principal.")
 
                             # Armazena os cookies
                             controller.set('logged_in', True)
                             controller.set('cliente_id', cliente_id)
-                            print('Settando logged_in como True')
-
-                            st.rerun()  # Redireciona após login
+                            main()
+                            st.rerun()
                         else:
                             st.error("Acesso negado. Verifique a data limite ou contate o suporte.")
                 else:
@@ -268,9 +266,9 @@ def login(controller):
 
 def main_page(controller):
     st.title("GeniusFut")
-    controller.set('logged_in', True)
-
-    if 'cliente_id' in st.session_state:
+    controller.set('logged_in', True, 'ck_logged_in')
+    cliente_id = controller.get('cliente_id')
+    if cliente_id is not None:
         conn = mysql.connector.connect(
             host='sql10.freesqldatabase.com',
             user='sql10732869',
@@ -279,9 +277,6 @@ def main_page(controller):
             port=3306
         )
         cursor = conn.cursor()
-
-        cliente_id = st.session_state.cliente_id
-
 
         # Usar %s como placeholder no MySQL
         cursor.execute("SELECT nome FROM clientes WHERE id = %s", (cliente_id,))
@@ -442,14 +437,12 @@ def main_page(controller):
             if st.button("Sair da conta"):
                 # Remover ou setar como falso o cookie de logged_in
                 controller.set('logged_in', False)  # Remover o estado de login
-                controller.set('cliente_id', '')  # Opcional: limpar o cliente_id
+                controller.set('cliente_id', None)  # Opcional: limpar o cliente_id
                 # Verifica se o usuário está logado
                 logged_in = controller.get('logged_in')
-
-                print(f'App: O logged_in é: {logged_in}')
-
                 # Redirecionar para a página de login
                 st.success("Você saiu da conta.")
+                login(controller)
                 st.rerun()
 
         # Adiciona a coluna para exibir a data de vencimento
@@ -825,8 +818,8 @@ def main_page(controller):
             with st.sidebar.expander("Painel Administrador", expanded=True):
                 admin_page()
     else:
-        st.write("Você não está logado.")
-
+        st.write("Você não está logado. Refaça o login")
+        login(controller)
 
 def admin_page():
     # Conectar ao banco de dados MySQL
@@ -860,11 +853,11 @@ def admin_page():
         st.dataframe(df_clientes)
 
         # Selecionar cliente para edição
-        cliente_id = st.selectbox("Selecione o ID do cliente para editar:", df_clientes["ID"])
+        cliente_edit = st.selectbox("Selecione o ID do cliente para editar:", df_clientes["ID"])
 
-        if cliente_id:
+        if cliente_edit:
             # Consultar informações do cliente selecionado
-            cursor.execute("SELECT * FROM clientes WHERE id = %s", (cliente_id,))
+            cursor.execute("SELECT * FROM clientes WHERE id = %s", (cliente_edit,))
             cliente = cursor.fetchone()
 
             # Formulário para editar informações do cliente
@@ -878,7 +871,7 @@ def admin_page():
                     UPDATE clientes 
                     SET nome = %s, telefone = %s, data_nascimento = %s, pais = %s,  
                     WHERE id = %s
-                """, (nome, telefone, data_nascimento, pais, cliente_id))
+                """, (nome, telefone, data_nascimento, pais, cliente_edit))
                 conn.commit()
                 st.success("Cliente atualizado com sucesso!")
 
@@ -929,7 +922,7 @@ def admin_page():
         st.dataframe(df_acessos)
     
         # Selecionar um cliente para criar um novo acesso
-        cliente_id = st.selectbox("Selecione o ID do Cliente para criar acesso:", df_acessos["ID do Cliente"].unique())
+        cliente_edit = st.selectbox("Selecione o ID do Cliente para criar acesso:", df_acessos["ID do Cliente"].unique())
     
         # Formulário para criar um novo acesso
         nova_data_limite = st.date_input("Data Limite para Novo Acesso", format="DD/MM/YYYY")
@@ -937,14 +930,14 @@ def admin_page():
     
         if st.button("Criar Acesso"):
             # Verificar se o cliente já possui um acesso
-            cursor.execute("SELECT * FROM acesso_cliente WHERE cliente_id = %s", (cliente_id,))
+            cursor.execute("SELECT * FROM acesso_cliente WHERE cliente_id = %s", (cliente_edit,))
             acesso_existente = cursor.fetchone()
     
             if acesso_existente:
                 st.warning("Este cliente já possui um acesso registrado. Você pode editar o acesso existente.")
             else:
                 cursor.execute("INSERT INTO acesso_cliente (cliente_id, data_limite, bypass) VALUES (%s, %s, %s)",
-                               (cliente_id, nova_data_limite, novo_bypass))
+                               (cliente_edit, nova_data_limite, novo_bypass))
                 conn.commit()
                 st.success("Novo acesso criado com sucesso!")
     
@@ -954,14 +947,11 @@ def admin_page():
 
 
 def main():
-    # Inicializa o controlador de cookies
-    controller = CookieController()
+    n = 0
+    # st.write(controller.getAll())
 
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
-
-    print(f'Main: O logged_in é: {logged_in}')
-
     # Obtem a data de vencimento do controlador de cookies
     data_vencimento = controller.get('data_limite')  # Supondo que você tenha armazenado a data de vencimento aqui
 
@@ -979,22 +969,21 @@ def main():
         st.rerun()  # Redireciona para a tela de login
 
     if logged_in is True:
-        st.session_state.cliente_id = controller.get('cliente_id')
-        # st.write(f'O cliente ID da MAIN é {controller.get('cliente_id')}')
         main_page(controller)
     elif logged_in is False:
         st.sidebar.title("Menu")
         opcao = st.sidebar.radio("Selecione uma opção", ["Login", "Criar Conta"])
-
         if opcao == "Login":
             login(controller)  # Passa o controlador de cookies para a função de login
         elif opcao == "Criar Conta":
             criar_nova_conta()
-
     else:
         if st.button('Primeiro login?'):
             controller.set('logged_in', False)
             st.rerun()
+
+
+
 
 
 if __name__ == "__main__":
