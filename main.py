@@ -8,12 +8,13 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import mysql.connector
 from PIL import Image, ImageDraw
+import base64
 
 
 administrador = 'Renan Barbosa Silva Vianna'
 dias_acesso = 3
 
-st.set_page_config(page_title="GeniusFut", page_icon="💫")
+st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")
 
 # Inicializa o controlador de cookies
 controller = CookieController()
@@ -265,7 +266,26 @@ def login(controller):
 
 
 def main_page(controller):
-    st.title("GeniusFut")
+
+    def get_base64_image(image_path):
+        with open(image_path, "rb") as img_file:
+            encoded_string = base64.b64encode(img_file.read()).decode()
+        return encoded_string
+
+    # Converte a imagem em base64
+    icon_base64 = get_base64_image("icone_mini.png")
+
+    # Usa HTML embutido no Markdown para mostrar o título e o ícone juntos
+    st.markdown(
+        f"""
+        <h1 style="display: flex; align-items: center;">
+            GeniusFut
+            <img src="data:image/png;base64,{icon_base64}" style="height: 60px; margin-left: 10px;">
+        </h1>
+        """,
+        unsafe_allow_html=True
+    )
+
     controller.set('logged_in', True, 'ck_logged_in')
     cliente_id = controller.get('cliente_id')
     if cliente_id is not None:
@@ -421,12 +441,33 @@ def main_page(controller):
         # Sidebar para timezone e botão de sair
         st.sidebar.write(f"Horários de {default_timezone}")
 
-        # Criar um layout de colunas para o botão de sair e trocar timezone
+        # Função para aplicar estilo ao botão com aparência de link
+        def create_styled_button(label, key):
+            st.markdown(
+                f"""
+                <style>
+                div[role="button"][aria-labelledby="stMarkdown{key}"] {{
+                    font-size: 12px;
+                    padding: 5px 10px;
+                    border: none;
+                    background-color: transparent;
+                    color: #007bff;
+                    cursor: pointer;
+                }}
+                div[role="button"][aria-labelledby="stMarkdown{key}"]:hover {{
+                    text-decoration: underline;
+                }}
+                </style>
+                """, unsafe_allow_html=True
+            )
+            return st.button(label, key=key)
+
+        # Layout de colunas mais compacto
         col1, col2, col3 = st.sidebar.columns(3)
 
         # Adiciona o botão para trocar timezone
         with col1:
-            if st.button("🔄 Timezone"):
+            if create_styled_button("🔄 Timezone", key="timezone_btn"):
                 selected_timezone = st.selectbox("Selecione o timezone:", timezones,
                                                  index=timezones.index(default_timezone))
             else:
@@ -434,12 +475,10 @@ def main_page(controller):
 
         # Adiciona o botão de sair
         with col2:
-            if st.button("Sair da conta"):
+            if create_styled_button("Sair", key="logout_btn"):
                 # Remover ou setar como falso o cookie de logged_in
                 controller.set('logged_in', False)  # Remover o estado de login
                 controller.set('cliente_id', None)  # Opcional: limpar o cliente_id
-                # Verifica se o usuário está logado
-                logged_in = controller.get('logged_in')
                 # Redirecionar para a página de login
                 st.success("Você saiu da conta.")
                 login(controller)
@@ -447,31 +486,20 @@ def main_page(controller):
 
         # Adiciona a coluna para exibir a data de vencimento
         with col3:
-            # Aqui você deve obter a data de vencimento do usuário, por exemplo, a partir do controller
-            data_vencimento = controller.get('data_limite')  # Supondo que a data limite foi salva no controller
+            # Simulação de uma data de vencimento
+            data_vencimento = "2024-12-31"  # Data simulada como string
 
-            # Verifique se data_vencimento é um objeto datetime ou date
-            if isinstance(data_vencimento, str):
-                # Se for uma string, tente converter para datetime
-                try:
-                    data_vencimento = datetime.strptime(data_vencimento,
-                                                        '%Y-%m-%d')  # Altere o formato conforme necessário
-                except ValueError:
-                    st.error("Formato de data inválido.")
-                    data_vencimento = None  # Para evitar erros posteriores
-
-            # Se data_vencimento ainda for None, não execute a seguinte linha
-            if data_vencimento is not None:
+            try:
+                data_vencimento = datetime.strptime(data_vencimento, '%Y-%m-%d')
                 st.markdown(
                     f"<span style='font-size: 12px;'>📅 Vencimento: {data_vencimento.strftime('%d/%m/%Y')}</span>",
                     unsafe_allow_html=True)
-            else:
+            except ValueError:
                 st.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
                             unsafe_allow_html=True)
 
-
         # Use a função para adicionar bordas arredondadas à imagem
-        rounded_image = add_rounded_corners('logo_genius_fut.jpg', radius=50)
+        rounded_image = add_rounded_corners('logo_atualizada.png', radius=50)
 
         # CSS para redimensionar a imagem
         st.sidebar.markdown(
@@ -947,9 +975,6 @@ def admin_page():
 
 
 def main():
-    n = 0
-    # st.write(controller.getAll())
-
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
     # Obtem a data de vencimento do controlador de cookies
