@@ -174,8 +174,6 @@ def verificar_acesso(cliente_id, controller):
     if data:
         data_limite, bypass = data
         hoje = datetime.now().date()
-        controller.set('data_limite', data_limite)
-        controller.set('bypass', bypass)
 
         # Verifica se data_limite é uma string antes de tentar converter
         if isinstance(data_limite, str):
