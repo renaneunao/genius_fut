@@ -158,7 +158,7 @@ def verificar_login(usuario, senha):
     return data  # Retorna apenas o id
 
 
-def verificar_acesso(cliente_id):
+def verificar_acesso(cliente_id, controller):
     conn = mysql.connector.connect(
         host='sql10.freesqldatabase.com',
         user='sql10732869',
@@ -174,6 +174,8 @@ def verificar_acesso(cliente_id):
     if data:
         data_limite, bypass = data
         hoje = datetime.now().date()
+        controller.set('data_limite', data_limite)
+        controller.set('bypass', bypass)
 
         # Verifica se data_limite é uma string antes de tentar converter
         if isinstance(data_limite, str):
@@ -247,7 +249,7 @@ def login(controller):
                     if data_limite < datetime.now().date() and bypass == 0:
                         st.error("Acesso negado. É necessário comprar uma licença.")
                     else:
-                        if verificar_acesso(cliente_id):
+                        if verificar_acesso(cliente_id, controller):
                             st.success("Login bem-sucedido! Bem-vindo à tela principal.")
 
                             # Armazena os cookies
@@ -979,6 +981,7 @@ def main():
     logged_in = controller.get('logged_in')
     # Obtem a data de vencimento do controlador de cookies
     data_vencimento = controller.get('data_limite')  # Supondo que você tenha armazenado a data de vencimento aqui
+    bypass = controller.get('bypass')
 
     if isinstance(data_vencimento, str):
         try:
@@ -988,9 +991,10 @@ def main():
             data_vencimento = None
 
     # Verifica se a data de vencimento é menor que a data atual
-    if data_vencimento is not None and data_vencimento < datetime.today():
+    if data_vencimento is not None and data_vencimento < datetime.today() and bypass == 0:
         st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
         controller.set('logged_in', False)  # Redefine o estado de login
+        login(controller)
         st.rerun()  # Redireciona para a tela de login
 
     if logged_in is True:
