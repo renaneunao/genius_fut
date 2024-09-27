@@ -180,7 +180,7 @@ def verificar_acesso(cliente_id):
             data_limite = datetime.strptime(data_limite, "%Y-%m-%d").date()  # Converte string para date
 
         # Agora você pode comparar diretamente
-        if bypass or data_limite >= hoje:
+        if bypass == 1 or data_limite >= hoje:
             return True
         else:
             return False
