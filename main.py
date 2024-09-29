@@ -957,12 +957,14 @@ def admin_page():
         cursor.close()
         conn.close()
 
+
 def main():
     # Verifica se o usuário está logado
-    if controller.get('logged_in') is not None:
+    if 'logged_in' in controller.get_all():  # Verifica se o cookie existe
         logged_in = controller.get('logged_in')
+
         # Obtem a data de vencimento do controlador de cookies
-        data_vencimento = controller.get('data_limite')  # Supondo que você tenha armazenado a data de vencimento aqui
+        data_vencimento = controller.get('data_limite')
 
         if isinstance(data_vencimento, str):
             try:
@@ -987,16 +989,12 @@ def main():
                 login(controller)  # Passa o controlador de cookies para a função de login
             elif opcao == "Criar Conta":
                 criar_nova_conta()
-        else:
-            st.write('Primeira vez por aqui?')
-            controller.set('logged_in', False)
-            login(controller)
-            st.rerun()
     else:
         st.write('Primeira vez por aqui?')
         controller.set('logged_in', False)
         login(controller)
         st.rerun()
+
 
 if __name__ == "__main__":
     main()
