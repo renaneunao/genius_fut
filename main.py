@@ -158,7 +158,7 @@ def verificar_login(usuario, senha):
     return data  # Retorna apenas o id
 
 
-def verificar_acesso(cliente_id, controller):
+def verificar_acesso(cliente_id):
     conn = mysql.connector.connect(
         host='sql10.freesqldatabase.com',
         user='sql10732869',
@@ -180,7 +180,7 @@ def verificar_acesso(cliente_id, controller):
             data_limite = datetime.strptime(data_limite, "%Y-%m-%d").date()  # Converte string para date
 
         # Agora você pode comparar diretamente
-        if bypass == 1 or data_limite >= hoje:
+        if bypass or data_limite >= hoje:
             return True
         else:
             return False
@@ -247,7 +247,7 @@ def login(controller):
                     if data_limite < datetime.now().date() and bypass == 0:
                         st.error("Acesso negado. É necessário comprar uma licença.")
                     else:
-                        if verificar_acesso(cliente_id, controller):
+                        if verificar_acesso(cliente_id):
                             st.success("Login bem-sucedido! Bem-vindo à tela principal.")
 
                             # Armazena os cookies
@@ -289,6 +289,25 @@ def main_page(controller):
     controller.set('logged_in', True, 'ck_logged_in')
     cliente_id = controller.get('cliente_id')
     if cliente_id is not None:
+        # Use a função para adicionar bordas arredondadas à imagem
+        rounded_image = add_rounded_corners('logo_atualizada.png', radius=30)
+
+        # CSS para redimensionar a imagem
+        st.sidebar.markdown(
+            """
+            <style>
+            .sidebar-image {
+                max-width: 100%; /* A imagem ocupará 100% da largura disponível */
+                height: auto; /* A altura será ajustada automaticamente */
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Exibir a imagem na sidebar
+        st.sidebar.image(rounded_image, use_column_width=True)
+
         conn = mysql.connector.connect(
             host='sql10.freesqldatabase.com',
             user='sql10732869',
@@ -437,85 +456,20 @@ def main_page(controller):
 
         # Timezone padrão
         default_timezone = "America/Sao_Paulo"
+        selected_timezone = default_timezone
 
-        # Sidebar para timezone e botão de sair
-        st.sidebar.write(f"Horários de {default_timezone}")
+        # Simulação de uma data de vencimento
+        data_vencimento = controller.get('data_limite')
 
-        # Função para aplicar estilo ao botão com aparência de link
-        def create_styled_button(label, key):
-            st.markdown(
-                f"""
-                <style>
-                div[role="button"][aria-labelledby="stMarkdown{key}"] {{
-                    font-size: 12px;
-                    padding: 5px 10px;
-                    border: none;
-                    background-color: transparent;
-                    color: #007bff;
-                    cursor: pointer;
-                }}
-                div[role="button"][aria-labelledby="stMarkdown{key}"]:hover {{
-                    text-decoration: underline;
-                }}
-                </style>
-                """, unsafe_allow_html=True
-            )
-            return st.button(label, key=key)
+        try:
+            data_vencimento = datetime.strptime(data_vencimento, '%Y-%m-%d')
+            st.sidebar.markdown(
+                f"<span style='font-size: 12px;'>📅 Vencimento: {data_vencimento.strftime('%d/%m/%Y')}</span>",
+                unsafe_allow_html=True)
+        except ValueError:
+            st.sidebar.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
+                        unsafe_allow_html=True)
 
-        # Layout de colunas mais compacto
-        col1, col2, col3 = st.sidebar.columns(3)
-
-        # Adiciona o botão para trocar timezone
-        with col1:
-            if create_styled_button("🔄 Timezone", key="timezone_btn"):
-                selected_timezone = st.selectbox("Selecione o timezone:", timezones,
-                                                 index=timezones.index(default_timezone))
-            else:
-                selected_timezone = default_timezone
-
-        # Adiciona o botão de sair
-        with col2:
-            if create_styled_button("Sair", key="logout_btn"):
-                # Remover ou setar como falso o cookie de logged_in
-                controller.set('logged_in', False)  # Remover o estado de login
-                controller.set('cliente_id', None)  # Opcional: limpar o cliente_id
-                # Redirecionar para a página de login
-                st.success("Você saiu da conta.")
-                login(controller)
-                st.rerun()
-
-        # Adiciona a coluna para exibir a data de vencimento
-        with col3:
-            # Simulação de uma data de vencimento
-            data_vencimento = "2024-12-31"  # Data simulada como string
-
-            try:
-                data_vencimento = datetime.strptime(data_vencimento, '%Y-%m-%d')
-                st.markdown(
-                    f"<span style='font-size: 12px;'>📅 Vencimento: {data_vencimento.strftime('%d/%m/%Y')}</span>",
-                    unsafe_allow_html=True)
-            except ValueError:
-                st.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
-                            unsafe_allow_html=True)
-
-        # Use a função para adicionar bordas arredondadas à imagem
-        rounded_image = add_rounded_corners('logo_atualizada.png', radius=50)
-
-        # CSS para redimensionar a imagem
-        st.sidebar.markdown(
-            """
-            <style>
-            .sidebar-image {
-                max-width: 100%; /* A imagem ocupará 100% da largura disponível */
-                height: auto; /* A altura será ajustada automaticamente */
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-
-        # Exibir a imagem na sidebar
-        st.sidebar.image(rounded_image, use_column_width=True)
 
         date = st.sidebar.date_input("Selecione a data:", pd.to_datetime('today'), format="DD/MM/YYYY")
 
@@ -842,6 +796,31 @@ def main_page(controller):
         else:
             st.write("Nenhum país encontrado.")
 
+        col_default_timezone, col_change_default_timezone = st.sidebar.columns(
+            [3, 1])  # Ajuste a proporção se necessário
+
+        with col_default_timezone:
+            # Sidebar para timezone
+            st.markdown(f"<div style='font-size: 14px;'>Horários de {default_timezone}</div>",
+                        unsafe_allow_html=True)
+
+        with col_change_default_timezone:
+            if st.button("🔄", key="timezone_btn"):
+                selected_timezone = st.selectbox("Selecione o timezone:", timezones,
+                                                 index=timezones.index(default_timezone))
+            else:
+                selected_timezone = default_timezone
+
+        # Alinha o botão com o texto
+        if st.sidebar.button("Sair", key="logout_btn"):
+            # Remover ou setar como falso o cookie de logged_in
+            controller.set('logged_in', False)  # Remover o estado de login
+            controller.set('cliente_id', None)  # Opcional: limpar o cliente_id
+            # Redirecionar para a página de login
+            st.success("Você saiu da conta.")
+            login(controller)
+            st.rerun()
+
         if nome_cliente == administrador:
             with st.sidebar.expander("Painel Administrador", expanded=True):
                 admin_page()
@@ -979,7 +958,6 @@ def main():
     logged_in = controller.get('logged_in')
     # Obtem a data de vencimento do controlador de cookies
     data_vencimento = controller.get('data_limite')  # Supondo que você tenha armazenado a data de vencimento aqui
-    bypass = controller.get('bypass')
 
     if isinstance(data_vencimento, str):
         try:
@@ -989,10 +967,9 @@ def main():
             data_vencimento = None
 
     # Verifica se a data de vencimento é menor que a data atual
-    if data_vencimento is not None and data_vencimento < datetime.today() and bypass == 0:
+    if data_vencimento is not None and data_vencimento < datetime.today():
         st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
         controller.set('logged_in', False)  # Redefine o estado de login
-        login(controller)
         st.rerun()  # Redireciona para a tela de login
 
     if logged_in is True:
