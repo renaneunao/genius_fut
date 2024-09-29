@@ -27,9 +27,7 @@
     <last-used-providers />
   </component>
   <component name="DBNavigator.Project.DatabaseFileManager">
-    <open-files>
-      <object connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" object-ref="schemas/geniusfut_database/tables/clientes" />
-    </open-files>
+    <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
     <connection id="d79b6d33-789e-40fb-ade8-52d9594f50c2" />

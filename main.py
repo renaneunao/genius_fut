@@ -10,6 +10,8 @@ import mysql.connector
 from PIL import Image, ImageDraw
 import base64
 from streamlit_extras.colored_header import colored_header
+from streamlit_extras.bottom_container import bottom
+from streamlit_extras.grid import grid
 
 
 administrador = 'Renan Barbosa Silva Vianna'
@@ -39,7 +41,6 @@ st.markdown(
 
 # Inicializa o controlador de cookies
 controller = CookieController()
-
 
 def criar_tabelas():
     conn = mysql.connector.connect(
@@ -290,6 +291,18 @@ def login(controller):
 
 
 def main_page(controller):
+    selected_country = None
+    selected_league = None
+    fixture_id = None
+    home_team_stats = None
+    away_team_stats = None
+    home_team_name = None
+    away_team_name = None
+    predictions = None
+    home_team_last_5_results = None
+    away_team_last_5_results = None
+    home_team_logo_url = None
+    away_team_logo_url = None
     # Exibir a imagem na sidebar
     st.sidebar.image('logo_atualizada.png', use_column_width=True)
     def get_base64_image(image_path):
@@ -338,6 +351,10 @@ def main_page(controller):
         else:
             nome_cliente = ''
             st.write("Cliente não encontrado.")
+            st.sidebar.image('logo_atualizada.png', use_column_width=True)
+            login(controller)
+            st.rerun()
+
 
         conn.close()
 
@@ -634,186 +651,6 @@ def main_page(controller):
                     # A lógica para mudar o timezone pode ser adicionada aqui
                     st.success(f"Timezone alterado para: {selected_timezone}")
 
-        with st.spinner("Carregando países..."):
-            countries = fetch_countries()
-
-        # Buscar países
-        if countries:
-            country_names = [country['name'] for country in countries]
-
-            # Selecionar o país armazenado, se disponível
-            selected_country = st.sidebar.selectbox("Selecione o país:", country_names, index=country_names.index(
-                controller.get('selected_country')) if controller.get('selected_country') in country_names else 0)
-            controller.set('selected_country', selected_country)
-
-            # Buscar ligas para o país selecionado
-            if selected_country:
-                with st.spinner("Carregando ligas..."):
-                    leagues = fetch_leagues(selected_country)
-                if leagues:
-                    league_names = [league['league']['name'] for league in leagues]
-
-                    # Selecionar a liga armazenada, se disponível
-                    selected_league = st.sidebar.selectbox("Selecione a liga:", league_names, index=league_names.index(
-                        controller.get('selected_league')) if controller.get('selected_league') in league_names else 0)
-                    controller.set('selected_league', selected_league)
-
-                    if selected_league:
-                        league_id = next(
-                            (league['league']['id'] for league in leagues if
-                             league['league']['name'] == selected_league), None)
-                        if league_id:
-                            with st.spinner("Carregando jogos..."):
-                                fixtures = fetch_fixtures(date, league_id, selected_timezone)
-                            if fixtures:
-                                games = [
-                                    {
-                                        'game_info': f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']} - {datetime.strptime(fixture['fixture']['date'], '%Y-%m-%dT%H:%M:%S%z').strftime('%H:%M')}",
-                                        'fixture_id': fixture['fixture']['id']
-                                    }
-                                    for fixture in fixtures
-                                ]
-                                game_options = [game['game_info'] for game in games]
-                                selected_game_info = st.sidebar.selectbox("Escolha um jogo:", game_options)
-
-                                if selected_game_info:
-                                    fixture_id = next(
-                                        game['fixture_id'] for game in games if game['game_info'] == selected_game_info
-                                    )
-
-                                    # Adiciona um botão para calcular as previsões
-                                    if st.sidebar.button("Calcular Previsão"):
-                                        (home_team_logo_url,
-                                         away_team_logo_url,
-                                         home_team_name,
-                                         away_team_name,
-                                         home_team_last_5_games,
-                                         away_team_last_5_games,
-                                         predictions,
-                                         team_id_home,
-                                         team_id_away) = get_prediction(fixture_id)
-
-                                        # Display the logos and other details side by side
-                                        col1, col2 = st.columns(2)
-
-                                        with col1:
-                                            if home_team_logo_url != 'N/A':
-                                                st.image(home_team_logo_url)
-                                                st.write(f"**{home_team_name}**")
-                                                st.write(home_team_last_5_games)
-
-                                        with col2:
-                                            if away_team_logo_url != 'N/A':
-                                                st.image(away_team_logo_url)
-                                                st.write(f"**{away_team_name}**")
-                                                st.write(away_team_last_5_games)
-
-                                        # Mapping results to colored dots
-                                        result_map = {'🟢': 'W', '🔴': 'L', '⚪': 'D'}
-                                        home_team_last_5_results = ''.join(
-                                            result_map.get(result, result) for result in home_team_last_5_games)
-                                        away_team_last_5_results = ''.join(
-                                            result_map.get(result, result) for result in away_team_last_5_games)
-
-                                        # Obter estatísticas para os dois times
-                                        home_team_stats = fetch_team_stats(season, team_id_home)
-                                        away_team_stats = fetch_team_stats(season, team_id_away)
-
-                                        # Exibir estatísticas na interface
-                                        st.title("Análise de Desempenho - Estatísticas de Futebol")
-
-                                        # Converter estatísticas em DataFrame e exibir
-                                        stats_casa = stats_to_dataframe(home_team_stats, "Time da Casa")
-                                        stats_fora = stats_to_dataframe(away_team_stats, "Time Visitante")
-
-                                        st.write("**Inteligência Artificial Calculando:**")
-
-                                        prompt = (
-                                            f"""
-                                            ### 1. Orientações para Resposta:
-
-                                            - **Linguagem**: Responda sempre no idioma selecionado: `{selected_language}`.
-                                            - **Personalização**: Dirija-se a mim pelo meu nome: `{user_name}` 
-                                            (se o nome não estiver disponível, ignore).
-                                            - **Especialização**: Você é um especialista em apostas online, focado em fornecer 
-                                            dicas valiosas com base nas informações disponíveis.
-                                            - **Confiança**: Responda com a confiança de um profissional experiente em apostas, 
-                                            alinhando sua resposta ao conteúdo fornecido.
-                                            - **Ambiente**: Mantenha um tom descontraído e destaque a aposta principal.
-                                            - **Cálculo de Aposta**: Apresente a aposta como resultado de uma análise cuidadosa, 
-                                            incluindo estatísticas relevantes na tabela. Mostre apenas as equipes mencionadas na 
-                                            aposta principal.
-
-                                            ## 2. Dicas de Apostas:
-                                            - Abaixo, apresente uma tabela com as equipes e, ao lado, as respectivas apostas.
-
-                                              | Time             | Aposta                  |
-                                              |------------------|------------------------|
-                                              | Casa: `{home_team_name}`  | `sua_dica_para_a_aposta` |
-                                              | Visitante: `{away_team_name}` | `sua_dica_para_a_aposta` |
-
-                                            - Com base no seguinte JSON, forneça sua dica:
-                                              `{str(predictions)}`
-                                            ## 3. Estatísticas Adicionais:
-                                            - Utilize as estatísticas adicionais para enriquecer sua resposta                                      
-                                              Considere as seguintes informações:
-                                              - Resultados dos últimos 5 jogos do time da casa: `{home_team_last_5_results}`.
-                                              - Resultados dos últimos 5 jogos do time visitante: `{away_team_last_5_results}`.
-                                              - Estatísticas do time da casa: `{stats_casa}` (dataframe).
-                                              - Estatísticas do time visitante: `{stats_fora}` (dataframe).
-                                            ## 4. Temperatura da Aposta:
-                                            - Utilize uma escala de 0 a 1, onde 0 representa segurança extrema e 1 representa 
-                                            risco extremo. A temperatura escolhida é `{bet_temperature}`. Não mencione a temperatura 
-                                            diretamente; apenas a aplique em suas sugestões.
-
-                                            ## 5. Sugestões de Apostas Adicionais:
-                                            - Forneça pelo menos uma sugestão adicional de aposta. Se a temperatura for acima 
-                                            da média, ofereça opções mais arriscadas com base nas estatísticas. Apresente essas 
-                                            apostas em uma tabela separada, numerada. 
-                                            - Para sugestões de under/over gols, mencione o jogo se for geral e o time 
-                                            específico se for uma aposta focada.
-
-                                              Exemplos de sugestões com base na temperatura:
-                                              - Temperatura 0: uma sugestão bastante segura.
-                                              - Temperatura 0.5: uma ou duas sugestões.
-                                              - Temperatura 1: três ou mais sugestões.
-
-                                            ## 6. Tendências de Gols:
-                                            - Se os dados do JSON e das tabelas indicarem uma tendência de under gols, não 
-                                            sugira apostas de over. 
-                                            - Se indicarem uma tendência de over gols, evite sugerir under.
-
-                                            ## 7. Ousadia nas Sugestões:
-                                            - Se a temperatura estiver alta, seja ousado nas sugestões. Se a tendência for over, 
-                                            considere incrementar a linha de gols. 
-                                              - Exemplos:
-                                                - Para uma tendência under de -3.5 gols, a sugestão pode ser -2.5 gols.
-                                                - Para uma tendência over de +2.5 gols, a sugestão pode ser +3.5 gols.
-                                            """
-                                        )
-
-                                        llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai)
-
-                                        # Adiciona o spinner enquanto aguarda a resposta da LLM
-                                        with st.spinner("Calculando previsão..."):
-                                            # Cria a chain para lidar com o LLM
-                                            chain = llm.invoke(prompt)
-
-                                            response = chain.content
-                                            # st.write(predictions)
-                                            st.write(response)
-
-                            else:
-                                st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
-                        else:
-                            st.write("ID da liga não encontrado.")
-                    else:
-                        st.write("Nenhuma liga encontrada para o país selecionado.")
-                else:
-                    st.write("Nenhuma liga encontrada para o país selecionado.")
-        else:
-            st.write("Nenhum país encontrado.")
-
         # Alinha o botão com o texto
         if st.sidebar.button("Sair da Conta", key="logout_btn"):
             # Remover ou setar como falso o cookie de logged_in
@@ -827,7 +664,235 @@ def main_page(controller):
         if nome_cliente == administrador:
             with st.sidebar.expander("Painel Administrador", expanded=True):
                 admin_page()
+
+        # Define o CSS para ajustar o layout do container específico do bottom
+        st.markdown(
+            """
+            <style>
+            /* Seleciona o elemento específico do bottom */
+            #root > div:nth-child(1) > div.withScreencast > div > div > div > section.stAppViewMain.main.st-emotion-cache-bm2z3a.ea3mdgi8 > div.st-emotion-cache-1p2n2i4.ea3mdgi7 > div > div > div {
+                max-width: 14000px;  /* Define a largura máxima */
+                max-height: 50px;  /* Define a altura máxima */
+                margin: auto;  /* Centraliza o container */
+                padding: 10px;  /* Ajusta o espaçamento interno */
+                background-color: #33CC00;  /* Adiciona uma cor de fundo */
+                border-radius: 10px;  /* Bordas arredondadas */
+            }
+            </style>
+            """, unsafe_allow_html=True
+        )
+        with bottom():
+            my_grid = grid([2, 2, 2, 1], vertical_align="bottom")
+
+            with st.spinner("Carregando países..."):
+                countries = fetch_countries()
+
+            # Buscar países
+            if countries:
+                country_names = [country['name'] for country in countries]
+
+                # Selecionar o país armazenado, se disponível
+                selected_country = my_grid.selectbox("Selecione o país:", country_names, index=country_names.index(
+                    controller.get('selected_country')) if controller.get('selected_country') in country_names else 0)
+                controller.set('selected_country', selected_country)
+            else:
+                st.write("Nenhum país encontrado.")
+
+            # Buscar ligas para o país selecionado
+            if selected_country:
+                with st.spinner("Carregando ligas..."):
+                    leagues = fetch_leagues(selected_country)
+                if leagues:
+                    league_names = [league['league']['name'] for league in leagues]
+
+                    # Selecionar a liga armazenada, se disponível
+                    selected_league = my_grid.selectbox("Selecione a liga:", league_names,
+                                                   index=league_names.index(
+                                                       controller.get('selected_league')) if controller.get(
+                                                       'selected_league') in league_names else 0)
+                    controller.set('selected_league', selected_league)
+            else:
+                st.write("Nenhuma liga encontrada para o país selecionado.")
+
+            if selected_league:
+                league_id = next(
+                    (league['league']['id'] for league in leagues if
+                     league['league']['name'] == selected_league), None)
+                if league_id:
+                    with st.spinner("Carregando jogos..."):
+                        fixtures = fetch_fixtures(date, league_id, selected_timezone)
+                    if fixtures:
+                        games = [
+                            {
+                                'game_info': f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']} - {datetime.strptime(fixture['fixture']['date'], '%Y-%m-%dT%H:%M:%S%z').strftime('%H:%M')}",
+                                'fixture_id': fixture['fixture']['id']
+                            }
+                            for fixture in fixtures
+                        ]
+                        game_options = [game['game_info'] for game in games]
+                        selected_game_info = my_grid.selectbox("Escolha um jogo:", game_options)
+
+                        if selected_game_info:
+                            fixture_id = next(
+                                game['fixture_id'] for game in games if
+                                game['game_info'] == selected_game_info
+                            )
+
+                    else:
+                        st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
+                else:
+                    st.write("ID da liga não encontrado.")
+            else:
+                st.write("Nenhuma liga encontrada para o país selecionado.")
+
+            st.markdown(
+                """
+                <style>
+                /* Seletor CSS do botão fornecido */
+                #root > div:nth-child(1) > div.withScreencast > div > div > div > section.stAppViewMain.main.st-emotion-cache-bm2z3a.ea3mdgi8 > div.st-emotion-cache-1p2n2i4.ea3mdgi7 > div > div > div > div > div > div.st-emotion-cache-0.e1f1d6gn0 > div > div > div.st-emotion-cache-ocqkz7.e1f1d6gn5 > div.st-emotion-cache-1b2d4l5.e1f1d6gn3 > div > div > div > div > div > button {
+                    background-color: black;  /* Fundo preto */
+                    border: 2px solid #33CC00;  /* Define a borda verde neon */
+                    border-radius: 5px;  /* Arredonda as bordas, se desejado */
+                    cursor: pointer;  /* Define o cursor para pointer */
+                    padding: 10px;  /* Ajusta o padding para dar um espaço */
+                    color: #33CC00;  /* Define a cor do texto como verde neon */
+                    transition: border-color 0.3s; /* Transição suave para a borda */
+                }
+
+                /* Efeito ao passar o mouse */
+                #root > div:nth-child(1) > div.withScreencast > div > div > div > section.stAppViewMain.main.st-emotion-cache-bm2z3a.ea3mdgi8 > div.st-emotion-cache-1p2n2i4.ea3mdgi7 > div > div > div > div > div > div.st-emotion-cache-0.e1f1d6gn0 > div > div > div.st-emotion-cache-ocqkz7.e1f1d6gn5 > div.st-emotion-cache-1b2d4l5.e1f1d6gn3 > div > div > div > div > div > button:hover {
+                    border-color: #00FF00;  /* Muda a cor da borda ao passar o mouse */
+                }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
+
+            # Adiciona um botão para calcular as previsões
+            if my_grid.button("►"):
+                (home_team_logo_url,
+                 away_team_logo_url,
+                 home_team_name,
+                 away_team_name,
+                 home_team_last_5_games,
+                 away_team_last_5_games,
+                 predictions,
+                 team_id_home,
+                 team_id_away) = get_prediction(fixture_id)
+
+        if predictions is not None:
+            # Display the logos and other details side by side
+            col1, col2 = st.columns(2)
+
+            with col1:
+                if home_team_logo_url != 'N/A':
+                    st.image(home_team_logo_url)
+                    st.write(f"**{home_team_name}**")
+                    st.write(home_team_last_5_games)
+
+            with col2:
+                if away_team_logo_url != 'N/A':
+                    st.image(away_team_logo_url)
+                    st.write(f"**{away_team_name}**")
+                    st.write(away_team_last_5_games)
+
+            # Mapping results to colored dots
+            result_map = {'🟢': 'W', '🔴': 'L', '⚪': 'D'}
+            home_team_last_5_results = ''.join(
+                result_map.get(result, result) for result in home_team_last_5_games)
+            away_team_last_5_results = ''.join(
+                result_map.get(result, result) for result in away_team_last_5_games)
+
+            # Obter estatísticas para os dois times
+            home_team_stats = fetch_team_stats(season, team_id_home)
+            away_team_stats = fetch_team_stats(season, team_id_away)
+
+            # Converter estatísticas em DataFrame e exibir
+            stats_casa = stats_to_dataframe(home_team_stats, "Time da Casa")
+            stats_fora = stats_to_dataframe(away_team_stats, "Time Visitante")
+
+            st.write("**Inteligência Artificial Calculando:**")
+
+            prompt = (
+                f"""
+                                                            ### 1. Orientações para Resposta:
+    
+                                                            - **Linguagem**: Responda sempre no idioma selecionado: `{selected_language}`.
+                                                            - **Personalização**: Dirija-se a mim pelo meu nome: `{user_name}` 
+                                                            (se o nome não estiver disponível, ignore).
+                                                            - **Especialização**: Você é um especialista em apostas online, focado em fornecer 
+                                                            dicas valiosas com base nas informações disponíveis.
+                                                            - **Confiança**: Responda com a confiança de um profissional experiente em apostas, 
+                                                            alinhando sua resposta ao conteúdo fornecido.
+                                                            - **Ambiente**: Mantenha um tom descontraído e destaque a aposta principal.
+                                                            - **Cálculo de Aposta**: Apresente a aposta como resultado de uma análise cuidadosa, 
+                                                            incluindo estatísticas relevantes na tabela. Mostre apenas as equipes mencionadas na 
+                                                            aposta principal.
+    
+                                                            ## 2. Dicas de Apostas:
+                                                            - Abaixo, apresente uma tabela com as equipes e, ao lado, as respectivas apostas.
+    
+                                                              | Time             | Aposta                  |
+                                                              |------------------|------------------------|
+                                                              | Casa: `{home_team_name}`  | `sua_dica_para_a_aposta` |
+                                                              | Visitante: `{away_team_name}` | `sua_dica_para_a_aposta` |
+    
+                                                            - Com base no seguinte JSON, forneça sua dica:
+                                                              `{str(predictions)}`
+                                                            ## 3. Estatísticas Adicionais:
+                                                            - Utilize as estatísticas adicionais para enriquecer sua resposta                                      
+                                                              Considere as seguintes informações:
+                                                              - Resultados dos últimos 5 jogos do time da casa: `{home_team_last_5_results}`.
+                                                              - Resultados dos últimos 5 jogos do time visitante: `{away_team_last_5_results}`.
+                                                              - Estatísticas do time da casa: `{stats_casa}` (dataframe).
+                                                              - Estatísticas do time visitante: `{stats_fora}` (dataframe).
+                                                            ## 4. Temperatura da Aposta:
+                                                            - Utilize uma escala de 0 a 1, onde 0 representa segurança extrema e 1 representa 
+                                                            risco extremo. A temperatura escolhida é `{bet_temperature}`. Não mencione a temperatura 
+                                                            diretamente; apenas a aplique em suas sugestões.
+    
+                                                            ## 5. Sugestões de Apostas Adicionais:
+                                                            - Forneça pelo menos uma sugestão adicional de aposta. Se a temperatura for acima 
+                                                            da média, ofereça opções mais arriscadas com base nas estatísticas. Apresente essas 
+                                                            apostas em uma tabela separada, numerada. 
+                                                            - Para sugestões de under/over gols, mencione o jogo se for geral e o time 
+                                                            específico se for uma aposta focada.
+    
+                                                              Exemplos de sugestões com base na temperatura:
+                                                              - Temperatura 0: uma sugestão bastante segura.
+                                                              - Temperatura 0.5: uma ou duas sugestões.
+                                                              - Temperatura 1: três ou mais sugestões.
+    
+                                                            ## 6. Tendências de Gols:
+                                                            - Se os dados do JSON e das tabelas indicarem uma tendência de under gols, não 
+                                                            sugira apostas de over. 
+                                                            - Se indicarem uma tendência de over gols, evite sugerir under.
+    
+                                                            ## 7. Ousadia nas Sugestões:
+                                                            - Se a temperatura estiver alta, seja ousado nas sugestões. Se a tendência for over, 
+                                                            considere incrementar a linha de gols. 
+                                                              - Exemplos:
+                                                                - Para uma tendência under de -3.5 gols, a sugestão pode ser -2.5 gols.
+                                                                - Para uma tendência over de +2.5 gols, a sugestão pode ser +3.5 gols.
+                                                            """
+            )
+
+            llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai)
+
+            # Adiciona o spinner enquanto aguarda a resposta da LLM
+            with st.spinner("Calculando previsão..."):
+                # Cria a chain para lidar com o LLM
+                chain = llm.invoke(prompt)
+
+                response = chain.content
+                # st.write(predictions)
+                st.write(response)
+        else:
+            st.write("Escolha um jogo e deixe a IA calcular a previsão.")
+            st.sidebar.image('logo_atualizada.png', use_column_width=True)
+
     else:
+        st.image('logo_atualizada.png', use_column_width=True)
         st.write("Você não está logado. Refaça o login")
         login(controller)
         st.rerun()
@@ -995,10 +1060,7 @@ def main():
         if st.button('Primeiro login?'):
             controller.set('logged_in', False)
             st.rerun()
-
-
-
-
+        st.sidebar.image('logo_atualizada.png', use_column_width=True)
 
 if __name__ == "__main__":
     main()
