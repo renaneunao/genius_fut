@@ -796,23 +796,19 @@ def main_page(controller):
         else:
             st.write("Nenhum país encontrado.")
 
-        col_default_timezone, col_change_default_timezone = st.sidebar.columns(
-            [3, 1])  # Ajuste a proporção se necessário
+        # Cria um expander para o timezone
+        with st.sidebar.expander(f"Horários de {default_timezone}", expanded=False):
+            # Dropdown para selecionar o timezone
+            selected_timezone = st.selectbox("Selecione o timezone:", timezones,
+                                             index=timezones.index(default_timezone))
 
-        with col_default_timezone:
-            # Sidebar para timezone
-            st.markdown(f"<div style='font-size: 14px;'>Horários de {default_timezone}</div>",
-                        unsafe_allow_html=True)
-
-        with col_change_default_timezone:
+            # Botão para mudar o timezone
             if st.button("🔄", key="timezone_btn"):
-                selected_timezone = st.selectbox("Selecione o timezone:", timezones,
-                                                 index=timezones.index(default_timezone))
-            else:
-                selected_timezone = default_timezone
+                # A lógica para mudar o timezone pode ser adicionada aqui
+                st.success(f"Timezone alterado para: {selected_timezone}")
 
         # Alinha o botão com o texto
-        if st.sidebar.button("Sair", key="logout_btn"):
+        if st.sidebar.button("Sair da Conta", key="logout_btn"):
             # Remover ou setar como falso o cookie de logged_in
             controller.set('logged_in', False)  # Remover o estado de login
             controller.set('cliente_id', None)  # Opcional: limpar o cliente_id
