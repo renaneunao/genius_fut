@@ -303,6 +303,7 @@ def main_page(controller):
     away_team_last_5_results = None
     home_team_logo_url = None
     away_team_logo_url = None
+    selected_game_info = None
     # Exibir a imagem na sidebar
     st.sidebar.image('logo_atualizada.png', use_column_width=True)
     def get_base64_image(image_path):
@@ -742,9 +743,11 @@ def main_page(controller):
                         # st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
                         pass
                 else:
-                    st.write("ID da liga não encontrado.")
+                    pass
+                    # st.write("ID da liga não encontrado.")
             else:
-                st.write("Nenhuma liga encontrada para o país selecionado.")
+                pass
+                # st.write("Nenhuma liga encontrada para o país selecionado.")
 
             st.markdown(
                 """
@@ -770,16 +773,17 @@ def main_page(controller):
             )
 
             # Adiciona um botão para calcular as previsões
-            if my_grid.button("►"):
-                (home_team_logo_url,
-                 away_team_logo_url,
-                 home_team_name,
-                 away_team_name,
-                 home_team_last_5_games,
-                 away_team_last_5_games,
-                 predictions,
-                 team_id_home,
-                 team_id_away) = get_prediction(fixture_id)
+            if selected_game_info is not None:
+                if my_grid.button("►"):
+                    (home_team_logo_url,
+                     away_team_logo_url,
+                     home_team_name,
+                     away_team_name,
+                     home_team_last_5_games,
+                     away_team_last_5_games,
+                     predictions,
+                     team_id_home,
+                     team_id_away) = get_prediction(fixture_id)
 
         if predictions is not None:
             # Display the logos and other details side by side
