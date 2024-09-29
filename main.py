@@ -739,7 +739,8 @@ def main_page(controller):
                             )
 
                     else:
-                        st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
+                        # st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
+                        pass
                 else:
                     st.write("ID da liga não encontrado.")
             else:
