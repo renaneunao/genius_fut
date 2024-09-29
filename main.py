@@ -9,12 +9,33 @@ from datetime import datetime, timedelta
 import mysql.connector
 from PIL import Image, ImageDraw
 import base64
+from streamlit_extras.colored_header import colored_header
 
 
 administrador = 'Renan Barbosa Silva Vianna'
 dias_acesso = 3
 
 st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")
+# Remover o botão de Deploy e ajustar o espaço em branco
+st.markdown(
+    r"""
+    <style>
+    /* Oculta o botão Deploy */
+    #root > div:nth-child(1) > div.withScreencast > div > div > header > div.st-emotion-cache-15ecox0.ezrtsby0 > div.stAppDeployButton {
+        display: none; /* Oculta todo o contêiner do botão Deploy */
+    }
+
+    /* Remove margens e padding adicionais do aplicativo */
+    .stApp {
+        margin: 0; /* Remove margens ao redor do aplicativo */
+        padding: 0; /* Remove padding ao redor do aplicativo */
+    }
+
+    /* Ajuste outros elementos se necessário */
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # Inicializa o controlador de cookies
 controller = CookieController()
@@ -269,7 +290,8 @@ def login(controller):
 
 
 def main_page(controller):
-
+    # Exibir a imagem na sidebar
+    st.sidebar.image('logo_atualizada.png', use_column_width=True)
     def get_base64_image(image_path):
         with open(image_path, "rb") as img_file:
             encoded_string = base64.b64encode(img_file.read()).decode()
@@ -292,24 +314,6 @@ def main_page(controller):
     controller.set('logged_in', True, 'ck_logged_in')
     cliente_id = controller.get('cliente_id')
     if cliente_id is not None:
-        # Use a função para adicionar bordas arredondadas à imagem
-        rounded_image = add_rounded_corners('logo_atualizada.png', radius=30)
-
-        # CSS para redimensionar a imagem
-        st.sidebar.markdown(
-            """
-            <style>
-            .sidebar-image {
-                max-width: 100%; /* A imagem ocupará 100% da largura disponível */
-                height: auto; /* A altura será ajustada automaticamente */
-            }
-            </style>
-            """,
-            unsafe_allow_html=True
-        )
-
-        # Exibir a imagem na sidebar
-        st.sidebar.image(rounded_image, use_column_width=True)
         conn = mysql.connector.connect(
             host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
             user='renaneunao',
@@ -326,7 +330,11 @@ def main_page(controller):
 
         if cliente:  # Verifica se o cliente não é None
             nome_cliente = cliente[0]
-            st.write(f"Bem-vindo, {nome_cliente}!")
+            colored_header(
+                label=f"Bem-vindo, {nome_cliente}!",
+                description="Aqui o GREEN é certo!",
+                color_name="green-70",
+            )
         else:
             nome_cliente = ''
             st.write("Cliente não encontrado.")
@@ -615,8 +623,16 @@ def main_page(controller):
                 """, unsafe_allow_html=True)
             controller.set('bet_temperature', bet_temperature)
 
-        # Interface com Streamlit
-        st.title('Análise de Confrontos de Futebol')
+            # Cria um expander para o timezone
+            with st.sidebar.expander(f"Horários de {default_timezone}", expanded=False):
+                # Dropdown para selecionar o timezone
+                selected_timezone = st.selectbox("Selecione o timezone:", timezones,
+                                                 index=timezones.index(default_timezone))
+
+                # Botão para mudar o timezone
+                if st.button("🔄", key="timezone_btn"):
+                    # A lógica para mudar o timezone pode ser adicionada aqui
+                    st.success(f"Timezone alterado para: {selected_timezone}")
 
         with st.spinner("Carregando países..."):
             countries = fetch_countries()
@@ -797,17 +813,6 @@ def main_page(controller):
                     st.write("Nenhuma liga encontrada para o país selecionado.")
         else:
             st.write("Nenhum país encontrado.")
-
-        # Cria um expander para o timezone
-        with st.sidebar.expander(f"Horários de {default_timezone}", expanded=False):
-            # Dropdown para selecionar o timezone
-            selected_timezone = st.selectbox("Selecione o timezone:", timezones,
-                                             index=timezones.index(default_timezone))
-
-            # Botão para mudar o timezone
-            if st.button("🔄", key="timezone_btn"):
-                # A lógica para mudar o timezone pode ser adicionada aqui
-                st.success(f"Timezone alterado para: {selected_timezone}")
 
         # Alinha o botão com o texto
         if st.sidebar.button("Sair da Conta", key="logout_btn"):

@@ -10,3 +10,6 @@ headless = true                        # Necessário para quando for usar em nuv
 port = 8501                            # Porta padrão do Streamlit
 enableCORS = false                     # Para evitar problemas de CORS
 enableXsrfProtection = false
+
+[client]
+toolbarMode = "minimal"
