@@ -471,7 +471,7 @@ def main_page(controller):
                         unsafe_allow_html=True)
 
 
-        date = st.sidebar.date_input("Selecione a data:", pd.to_datetime('today'), format="DD/MM/YYYY")
+        date = st.sidebar.date_input("Selecione a data do jogo desejado:", pd.to_datetime('today'), format="DD/MM/YYYY")
 
         # Extraindo o ano da data escolhida para a temporada
         season = pd.to_datetime(date).year
