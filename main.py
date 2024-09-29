@@ -957,43 +957,42 @@ def admin_page():
         cursor.close()
         conn.close()
 
-
 def main():
     # Verifica se o usuário está logado
-    if 'logged_in' in controller.get_all():  # Verifica se o cookie existe
-        logged_in = controller.get('logged_in')
+    logged_in = controller.get('logged_in')
+    # Obtem a data de vencimento do controlador de cookies
+    data_vencimento = controller.get('data_limite')  # Supondo que você tenha armazenado a data de vencimento aqui
 
-        # Obtem a data de vencimento do controlador de cookies
-        data_vencimento = controller.get('data_limite')
+    if isinstance(data_vencimento, str):
+        try:
+            data_vencimento = datetime.strptime(data_vencimento, '%Y-%m-%d')  # Ajuste o formato conforme necessário
+        except ValueError:
+            st.error("Formato de data inválido.")
+            data_vencimento = None
 
-        if isinstance(data_vencimento, str):
-            try:
-                data_vencimento = datetime.strptime(data_vencimento, '%Y-%m-%d')  # Ajuste o formato conforme necessário
-            except ValueError:
-                st.error("Formato de data inválido.")
-                data_vencimento = None
-
-        # Verifica se a data de vencimento é menor que a data atual
-        if data_vencimento is not None and data_vencimento < datetime.today():
-            st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
-            controller.set('logged_in', False)  # Redefine o estado de login
-            login(controller)
-            st.rerun()  # Redireciona para a tela de login
-
-        if logged_in is True:
-            main_page(controller)
-        elif logged_in is False:
-            st.sidebar.title("Menu")
-            opcao = st.sidebar.radio("Selecione uma opção", ["Login", "Criar Conta"])
-            if opcao == "Login":
-                login(controller)  # Passa o controlador de cookies para a função de login
-            elif opcao == "Criar Conta":
-                criar_nova_conta()
-    else:
-        st.write('Primeira vez por aqui?')
-        controller.set('logged_in', False)
+    # Verifica se a data de vencimento é menor que a data atual
+    if data_vencimento is not None and data_vencimento < datetime.today():
+        st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
+        controller.set('logged_in', False)  # Redefine o estado de login
         login(controller)
-        st.rerun()
+        st.rerun()  # Redireciona para a tela de login
+
+    if logged_in is True:
+        main_page(controller)
+    elif logged_in is False:
+        st.sidebar.title("Menu")
+        opcao = st.sidebar.radio("Selecione uma opção", ["Login", "Criar Conta"])
+        if opcao == "Login":
+            login(controller)  # Passa o controlador de cookies para a função de login
+        elif opcao == "Criar Conta":
+            criar_nova_conta()
+    else:
+        if st.button('Primeiro login?'):
+            controller.set('logged_in', False)
+            st.rerun()
+
+
+
 
 
 if __name__ == "__main__":
