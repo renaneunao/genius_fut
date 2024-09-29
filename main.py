@@ -21,12 +21,11 @@ controller = CookieController()
 
 
 def criar_tabelas():
-    # Connect to the MySQL database using the provided credentials
     conn = mysql.connector.connect(
-        host='sql10.freesqldatabase.com',
-        user='sql10732869',
-        password='rKCF2E9gIw',
-        database='sql10732869',
+        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+        user='renaneunao',
+        password='*Vitorya111',
+        database='geniusfut_database',
         port=3306
     )
     cursor = conn.cursor()
@@ -92,12 +91,13 @@ def criar_nova_conta():
 
 def criar_conta(usuario, senha, nome, telefone, data_nascimento, pais):
     conn = mysql.connector.connect(
-        host='sql10.freesqldatabase.com',
-        user='sql10732869',
-        password='rKCF2E9gIw',
-        database='sql10732869',
+        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+        user='renaneunao',
+        password='*Vitorya111',
+        database='geniusfut_database',
         port=3306
     )
+
     cursor = conn.cursor()
     try:
         # Verificar se o telefone já existe no banco de clientes
@@ -132,6 +132,7 @@ def criar_conta(usuario, senha, nome, telefone, data_nascimento, pais):
 
         conn.commit()
         st.success("Conta criada com sucesso!")
+        login(controller)
 
     except mysql.connector.IntegrityError as e:
         st.error(f"Erro de integridade ao criar conta: {str(e)}")
@@ -144,12 +145,13 @@ def criar_conta(usuario, senha, nome, telefone, data_nascimento, pais):
 
 def verificar_login(usuario, senha):
     conn = mysql.connector.connect(
-        host='sql10.freesqldatabase.com',
-        user='sql10732869',
-        password='rKCF2E9gIw',
-        database='sql10732869',
+        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+        user='renaneunao',
+        password='*Vitorya111',
+        database='geniusfut_database',
         port=3306
     )
+
     cursor = conn.cursor()
     cursor.execute('SELECT id FROM credenciais WHERE usuario = %s AND senha = %s', (usuario, senha))
     data = cursor.fetchone()
@@ -160,10 +162,10 @@ def verificar_login(usuario, senha):
 
 def verificar_acesso(cliente_id):
     conn = mysql.connector.connect(
-        host='sql10.freesqldatabase.com',
-        user='sql10732869',
-        password='rKCF2E9gIw',
-        database='sql10732869',
+        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+        user='renaneunao',
+        password='*Vitorya111',
+        database='geniusfut_database',
         port=3306
     )
     cursor = conn.cursor()
@@ -217,12 +219,13 @@ def login(controller):
         credenciais = verificar_login(usuario, senha)
         if credenciais:
             conn = mysql.connector.connect(
-                host='sql10.freesqldatabase.com',
-                user='sql10732869',
-                password='rKCF2E9gIw',
-                database='sql10732869',
+                host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+                user='renaneunao',
+                password='*Vitorya111',
+                database='geniusfut_database',
                 port=3306
             )
+
             cursor_clientes = conn.cursor()
             cursor_clientes.execute('SELECT id FROM clientes WHERE usuario = %s', (usuario,))
             cliente = cursor_clientes.fetchone()
@@ -307,14 +310,14 @@ def main_page(controller):
 
         # Exibir a imagem na sidebar
         st.sidebar.image(rounded_image, use_column_width=True)
-
         conn = mysql.connector.connect(
-            host='sql10.freesqldatabase.com',
-            user='sql10732869',
-            password='rKCF2E9gIw',
-            database='sql10732869',
+            host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+            user='renaneunao',
+            password='*Vitorya111',
+            database='geniusfut_database',
             port=3306
         )
+
         cursor = conn.cursor()
 
         # Usar %s como placeholder no MySQL
@@ -469,7 +472,6 @@ def main_page(controller):
         except ValueError:
             st.sidebar.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
                         unsafe_allow_html=True)
-
 
         date = st.sidebar.date_input("Selecione a data do jogo desejado:", pd.to_datetime('today'), format="DD/MM/YYYY")
 
@@ -823,14 +825,14 @@ def main_page(controller):
     else:
         st.write("Você não está logado. Refaça o login")
         login(controller)
+        st.rerun()
 
 def admin_page():
-    # Conectar ao banco de dados MySQL
     conn = mysql.connector.connect(
-        host='sql10.freesqldatabase.com',
-        user='sql10732869',
-        password='rKCF2E9gIw',
-        database='sql10732869',
+        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+        user='renaneunao',
+        password='*Vitorya111',
+        database='geniusfut_database',
         port=3306
     )
 
@@ -909,8 +911,8 @@ def admin_page():
 
     elif menu == "Listar Acessos":
         st.subheader("Acessos dos Clientes")
-    
         # Listar todos os clientes com LEFT JOIN para incluir clientes sem acessos
+
         cursor.execute(
             """
             SELECT c.id AS cliente_id, c.nome, ac.data_limite, ac.bypass 
@@ -920,34 +922,40 @@ def admin_page():
         )
         acessos = cursor.fetchall()
         df_acessos = pd.DataFrame(acessos, columns=["ID do Cliente", "Nome", "Data Limite", "Bypass"])
-    
+
         # Exibir a lista de acessos
         st.dataframe(df_acessos)
-    
-        # Selecionar um cliente para criar um novo acesso
-        cliente_edit = st.selectbox("Selecione o ID do Cliente para criar acesso:", df_acessos["ID do Cliente"].unique())
-    
-        # Formulário para criar um novo acesso
-        nova_data_limite = st.date_input("Data Limite para Novo Acesso", format="DD/MM/YYYY")
-        novo_bypass = st.number_input("Bypass para Novo Acesso", min_value=0)
-    
-        if st.button("Criar Acesso"):
-            # Verificar se o cliente já possui um acesso
-            cursor.execute("SELECT * FROM acesso_cliente WHERE cliente_id = %s", (cliente_edit,))
-            acesso_existente = cursor.fetchone()
-    
-            if acesso_existente:
-                st.warning("Este cliente já possui um acesso registrado. Você pode editar o acesso existente.")
-            else:
-                cursor.execute("INSERT INTO acesso_cliente (cliente_id, data_limite, bypass) VALUES (%s, %s, %s)",
-                               (cliente_edit, nova_data_limite, novo_bypass))
+
+        # Selecionar um cliente para editar acesso
+        cliente_edit = st.selectbox("Selecione o ID do Cliente para editar acesso:", df_acessos["ID do Cliente"].unique())
+
+        # Verificar se o cliente já possui um acesso
+        cursor.execute("SELECT * FROM acesso_cliente WHERE cliente_id = %s", (cliente_edit,))
+
+        acesso_existente = cursor.fetchone()
+        if acesso_existente:
+
+            # Campos para edição
+            nova_data_limite_edit = st.date_input("Nova Data Limite:",
+                                                  value=acesso_existente[1])  # Assuming date is the second column
+
+            novo_bypass_edit = st.number_input("Novo Valor do Bypass:", value=acesso_existente[2], min_value=0,
+                                               max_value=1)  # Assuming bypass is the third column
+
+            if st.button('Confirmar edição'):
+                # Atualiza os dados de acesso
+                cursor.execute(
+                    "UPDATE acesso_cliente SET data_limite = %s, bypass = %s WHERE cliente_id = %s",
+                    (nova_data_limite_edit, novo_bypass_edit, cliente_edit)
+                )
                 conn.commit()
-                st.success("Novo acesso criado com sucesso!")
-    
+                st.success("Acesso editado com sucesso!")
+        else:
+            st.warning("Nenhum acesso encontrado para este cliente.")
+
         # Fechar o cursor e a conexão
         cursor.close()
         conn.close()
-
 
 def main():
     # Verifica se o usuário está logado
