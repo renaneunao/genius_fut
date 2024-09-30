@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 import mysql.connector
 from PIL import Image, ImageDraw
 import base64
+import pytz
+
 from streamlit_extras.colored_header import colored_header
 from streamlit_extras.bottom_container import bottom
 from streamlit_extras.grid import grid
@@ -499,7 +501,12 @@ def main_page(controller):
             st.sidebar.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
                         unsafe_allow_html=True)
 
-        date = st.sidebar.date_input("Selecione a data do jogo desejado:", pd.to_datetime('today'), format="DD/MM/YYYY")
+        # Definir o timezone do Brasil
+        br_tz = pytz.timezone('America/Sao_Paulo')
+
+        # Selecionar a data do jogo
+        date = st.sidebar.date_input("Selecione a data do jogo desejado:", pd.to_datetime('today').tz_localize(br_tz),
+                                     format="DD/MM/YYYY")
 
         # Extraindo o ano da data escolhida para a temporada
         season = pd.to_datetime(date).year
