@@ -310,7 +310,9 @@ def login(controller):
             st.rerun()
 
 def main_page(controller):
-    controller.set('logged_in', True)
+    st.write(f'Logged_In: {controller.get('logged_in')}')
+    st.write(f'Cliente: {controller.get('cliente_id')}')
+    time.sleep(10)
     selected_country = None
     selected_league = None
     fixture_id = None
@@ -980,6 +982,7 @@ def main_page(controller):
             st.sidebar.image('logo_atualizada.png', use_column_width=True)
 
     else:
+        controller.set('logged_in', False)
         st.image('logo_atualizada.png', use_column_width=True)
         st.write("Você não está logado. Refaça o login")
         login(controller)
