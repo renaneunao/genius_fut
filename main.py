@@ -310,9 +310,9 @@ def login(controller):
             st.rerun()
 
 def main_page(controller):
-    st.write(f'Logged_In: {controller.get('logged_in')}')
-    st.write(f'Cliente: {controller.get('cliente_id')}')
-    time.sleep(10)
+    print(f'Logged_In: {controller.get('logged_in')}')
+    print(f'Cliente: {controller.get('cliente_id')}')
+    time.sleep(3)
     selected_country = None
     selected_league = None
     fixture_id = None
@@ -1121,6 +1121,8 @@ def admin_page():
         conn.close()
 
 def main():
+    print(f'Logged_In: {controller.get('logged_in')}')
+    print(f'Cliente: {controller.get('cliente_id')}')
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
     print(logged_in)
