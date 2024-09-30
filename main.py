@@ -515,8 +515,6 @@ def main_page(controller):
         # date = st.sidebar.date_input("Selecione a data do jogo desejado:", pd.to_datetime('today').tz_localize(br_tz),
         #                              format="DD/MM/YYYY")
 
-        timezone = pytz.timezone(selected_timezone)
-        date = datetime.now(timezone).strftime('%d-%m-%Y')
 
         # Extraindo o ano da data escolhida para a temporada
         season = pd.to_datetime(date).year
@@ -808,14 +806,14 @@ def main_page(controller):
                             # Imprimir o fixture_id selecionado
                             print(f"Fixture ID selecionado: {fixture_id}")
                     else:
-                        # st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
-                        pass
+                        st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
+                        # pass
                 else:
-                    pass
-                    # st.write("ID da liga não encontrado.")
+                    # pass
+                    st.write("ID da liga não encontrado.")
             else:
-                pass
-                # st.write("Nenhuma liga encontrada para o país selecionado.")
+                # pass
+                st.write("Nenhuma liga encontrada para o país selecionado.")
 
             st.markdown(
                 """
