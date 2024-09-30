@@ -641,6 +641,56 @@ def main_page(controller):
                 """, unsafe_allow_html=True)
             controller.set('bet_temperature', bet_temperature)
 
+            # Obtém o valor da odd mínima configurada
+            min_odd_value = controller.get('min_odd_value')
+
+            if min_odd_value is not None:
+                min_odd = float(min_odd_value)
+            else:
+                # Tratar o caso de None (ex: definir um valor padrão ou levantar um erro)
+                min_odd = 1.1  # ou qualquer outro valor padrão que você desejar
+
+            # Configura o slider para odd mínima
+            min_odd = st.slider(
+                "Defina a odd mínima (1.1 a 20):",
+                min_value=1.1,
+                max_value=20.0,
+                value=min_odd,
+                step=0.1,
+                help="Defina a odd mínima para suas apostas."
+            )
+
+            # Adiciona HTML e CSS para os emojis
+            st.markdown("""
+                <style>
+                .slider-container {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    position: relative;
+                    margin-top: -20px;
+                }
+                .slider-container div {
+                    font-size: 15px;
+                }
+                .slider-container .min-emoji {
+                    margin-right: 10px;
+                }
+                .slider-container .max-emoji {
+                    margin-left: 10px;
+                }
+                </style>
+                <div class="slider-container">
+                    <div class="min-emoji">🔻</div>
+                    <div class="max-emoji">🔺</div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # Armazena o valor da odd mínima no controller
+            controller.set('min_odd_value', min_odd)
+
+            st.write(min_odd)
+
             # Cria um expander para o timezone
             with st.sidebar.expander(f"Horários de {default_timezone}", expanded=False):
                 # Dropdown para selecionar o timezone
@@ -694,7 +744,7 @@ def main_page(controller):
 
                 # Selecionar o país armazenado, se disponível
                 selected_country = my_grid.selectbox("Selecione o país:", country_names, index=country_names.index(
-                    controller.get('selected_country')) if controller.get('selected_country') in country_names else 0)
+                    controller.get('selected_country')) if controller.get('selected_country') in country_names else 23)
                 controller.set('selected_country', selected_country)
             else:
                 st.write("Nenhum país encontrado.")
@@ -738,7 +788,8 @@ def main_page(controller):
                                 game['fixture_id'] for game in games if
                                 game['game_info'] == selected_game_info
                             )
-
+                            # Imprimir o fixture_id selecionado
+                            print(f"Fixture ID selecionado: {fixture_id}")
                     else:
                         # st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
                         pass
