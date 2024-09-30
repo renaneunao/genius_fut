@@ -44,6 +44,10 @@ st.markdown(
 # Inicializa o controlador de cookies
 controller = CookieController()
 
+# Variável para controlar a tela atual (login ou criar conta)
+if 'screen' not in st.session_state:
+    st.session_state['screen'] = 'login'  # Tela padrão é a de login
+
 def criar_tabelas():
     conn = mysql.connector.connect(
         host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
@@ -89,28 +93,36 @@ def criar_nova_conta():
     st.title("Criar Nova Conta")
 
     # Inputs do usuário
-    usuario = st.text_input("Usuário")
-    senha = st.text_input("Senha", type='password')
-    confirmar_senha = st.text_input("Confirmar Senha", type='password')
-    nome = st.text_input("Nome Completo")
-    telefone = st.text_input("Telefone")
-    data_nascimento = st.date_input("Data de Nascimento", format="DD/MM/YYYY")
-    pais = st.text_input("País")
+    usuario = st.text_input("Usuário", key='text_input_criar_usuario')
+    senha = st.text_input("Senha", type='password', key='text_input_criar_senha')
+    confirmar_senha = st.text_input("Confirmar Senha", type='password', key='text_input_criar_confirmar_senha')
+    nome = st.text_input("Nome Completo", key='text_input_criar_nome_completo')
+    telefone = st.text_input("Telefone", key='text_input_criar_telefone')
+    data_nascimento = st.date_input("Data de Nascimento", format="DD/MM/YYYY", key='text_input_criar_data_nascimento')
+    pais = st.text_input("País", key='text_input_criar_pais')
 
-    # Validação ao clicar no botão "Criar Conta"
-    if st.button("Criar Conta"):
-        # Verificar se todos os campos estão preenchidos
-        if not usuario or not senha or not confirmar_senha or not nome or not telefone or not data_nascimento or not pais:
-            st.error("Todos os campos são obrigatórios!")
-            return
+    col1, col2 = st.columns(2)
+    with col1:
+        # Validação ao clicar no botão "Criar Conta"
+        if st.button("Criar Conta"):
+            # Verificar se todos os campos estão preenchidos
+            if not usuario or not senha or not confirmar_senha or not nome or not telefone or not data_nascimento or not pais:
+                st.error("Todos os campos são obrigatórios!")
+                return
 
-        # Verificar se as senhas correspondem
-        if senha != confirmar_senha:
-            st.error("As senhas não correspondem!")
-            return
+            # Verificar se as senhas correspondem
+            if senha != confirmar_senha:
+                st.error("As senhas não correspondem!")
+                return
 
-        # Se as validações passarem, criar a conta
-        criar_conta(usuario, senha, nome, telefone, data_nascimento, pais)
+            # Se as validações passarem, criar a conta
+            criar_conta(usuario, senha, nome, telefone, data_nascimento, pais)
+
+    with col2:
+        # Botão para voltar à tela de login
+        if st.button("Já tem uma conta? Faça login"):
+            st.session_state['screen'] = 'login'  # Muda a tela para login
+            st.rerun()
 
 
 def criar_conta(usuario, senha, nome, telefone, data_nascimento, pais):
@@ -156,7 +168,6 @@ def criar_conta(usuario, senha, nome, telefone, data_nascimento, pais):
 
         conn.commit()
         st.success("Conta criada com sucesso!")
-        login(controller)
 
     except mysql.connector.IntegrityError as e:
         st.error(f"Erro de integridade ao criar conta: {str(e)}")
@@ -229,9 +240,7 @@ def add_rounded_corners(image_path, radius):
 
 
 def login(controller):
-    # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
-    # print(f'Login: O logged_in é: {logged_in}')
     if not logged_in:
         controller.set('logged_in', False, 'ck_logged_in')
 
@@ -239,58 +248,65 @@ def login(controller):
     usuario = st.text_input("Usuário")
     senha = st.text_input("Senha", type='password')
 
-    if st.button("Entrar"):
-        credenciais = verificar_login(usuario, senha)
-        if credenciais:
-            conn = mysql.connector.connect(
-                host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
-                user='renaneunao',
-                password='*Vitorya111',
-                database='geniusfut_database',
-                port=3306
-            )
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Entrar"):
+            credenciais = verificar_login(usuario, senha)
+            if credenciais:
+                conn = mysql.connector.connect(
+                    host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+                    user='renaneunao',
+                    password='*Vitorya111',
+                    database='geniusfut_database',
+                    port=3306
+                )
 
-            cursor_clientes = conn.cursor()
-            cursor_clientes.execute('SELECT id FROM clientes WHERE usuario = %s', (usuario,))
-            cliente = cursor_clientes.fetchone()
+                cursor_clientes = conn.cursor()
+                cursor_clientes.execute('SELECT id FROM clientes WHERE usuario = %s', (usuario,))
+                cliente = cursor_clientes.fetchone()
 
-            if cliente:
-                cliente_id = cliente[0]
-                cursor_acessos = conn.cursor()
-                cursor_acessos.execute('SELECT data_limite, bypass FROM acesso_cliente WHERE cliente_id = %s',
-                                       (cliente_id,))
-                acesso = cursor_acessos.fetchone()
+                if cliente:
+                    cliente_id = cliente[0]
+                    cursor_acessos = conn.cursor()
+                    cursor_acessos.execute('SELECT data_limite, bypass FROM acesso_cliente WHERE cliente_id = %s',
+                                           (cliente_id,))
+                    acesso = cursor_acessos.fetchone()
 
-                conn.close()  # Fechar a conexão após obter os dados
+                    conn.close()  # Fechar a conexão após obter os dados
 
-                if acesso:
-                    data_limite, bypass = acesso
-                    controller.set('data_limite',
-                                   data_limite.strftime('%Y-%m-%d'))  # Converter para string no formato ISO
+                    if acesso:
+                        data_limite, bypass = acesso
+                        controller.set('data_limite',
+                                       data_limite.strftime('%Y-%m-%d'))  # Converter para string no formato ISO
 
-                    controller.set('bypass', bypass)
+                        controller.set('bypass', bypass)
 
-                    # Verificar se a data limite é menor que hoje e o bypass é zero
-                    if data_limite < datetime.now().date() and bypass == 0:
-                        st.error("Acesso negado. É necessário comprar uma licença.")
-                    else:
-                        if verificar_acesso(cliente_id):
-                            st.success("Login bem-sucedido! Bem-vindo à tela principal.")
-
-                            # Armazena os cookies
-                            controller.set('logged_in', True)
-                            controller.set('cliente_id', cliente_id)
-                            main()
-                            st.rerun()
+                        # Verificar se a data limite é menor que hoje e o bypass é zero
+                        if data_limite < datetime.now().date() and bypass == 0:
+                            st.error("Acesso negado. É necessário comprar uma licença.")
                         else:
-                            st.error("Acesso negado. Verifique a data limite ou contate o suporte.")
-                else:
-                    st.error("Nenhum acesso encontrado para este cliente.")
-            else:
-                st.error("Cliente não encontrado.")
-        else:
-            st.error("Usuário ou senha incorretos.")
+                            if verificar_acesso(cliente_id):
+                                st.success("Login bem-sucedido! Bem-vindo à tela principal.")
 
+                                # Armazena os cookies
+                                controller.set('logged_in', True)
+                                controller.set('cliente_id', cliente_id)
+                                main()
+                                st.rerun()
+                            else:
+                                st.error("Acesso negado. Verifique a data limite ou contate o suporte.")
+                    else:
+                        st.error("Nenhum acesso encontrado para este cliente.")
+                else:
+                    st.error("Cliente não encontrado.")
+            else:
+                st.error("Usuário ou senha incorretos.")
+
+    with col2:
+        # Botão para ir à tela de criar nova conta
+        if st.button("Criar nova conta"):
+            st.session_state['screen'] = 'criar_conta'  # Muda a tela para criação de conta
+            st.rerun()
 
 def main_page(controller):
     selected_country = None
@@ -308,6 +324,7 @@ def main_page(controller):
     selected_game_info = None
     # Exibir a imagem na sidebar
     st.sidebar.image('logo_atualizada.png', use_column_width=True)
+
     def get_base64_image(image_path):
         with open(image_path, "rb") as img_file:
             encoded_string = base64.b64encode(img_file.read()).decode()
@@ -357,7 +374,6 @@ def main_page(controller):
             st.sidebar.image('logo_atualizada.png', use_column_width=True)
             login(controller)
             st.rerun()
-
 
         conn.close()
 
@@ -509,12 +525,11 @@ def main_page(controller):
                 unsafe_allow_html=True)
         except ValueError:
             st.sidebar.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
-                        unsafe_allow_html=True)
+                                unsafe_allow_html=True)
 
         # # Selecionar a data do jogo
         # date = st.sidebar.date_input("Selecione a data do jogo desejado:", pd.to_datetime('today').tz_localize(br_tz),
         #                              format="DD/MM/YYYY")
-
 
         # Extraindo o ano da data escolhida para a temporada
         season = pd.to_datetime(date).year
@@ -773,9 +788,9 @@ def main_page(controller):
 
                     # Selecionar a liga armazenada, se disponível
                     selected_league = my_grid.selectbox("Selecione a liga:", league_names,
-                                                   index=league_names.index(
-                                                       controller.get('selected_league')) if controller.get(
-                                                       'selected_league') in league_names else 0)
+                                                        index=league_names.index(
+                                                            controller.get('selected_league')) if controller.get(
+                                                            'selected_league') in league_names else 0)
                     controller.set('selected_league', selected_league)
             else:
                 st.write("Nenhuma liga encontrada para o país selecionado.")
@@ -887,7 +902,7 @@ def main_page(controller):
             prompt = (
                 f"""
                                                             ### 1. Orientações para Resposta:
-    
+
                                                             - **Linguagem**: Responda sempre no idioma selecionado: `{selected_language}`.
                                                             - **Personalização**: Dirija-se a mim pelo meu nome: `{user_name}` 
                                                             (se o nome não estiver disponível, ignore).
@@ -899,15 +914,15 @@ def main_page(controller):
                                                             - **Cálculo de Aposta**: Apresente a aposta como resultado de uma análise cuidadosa, 
                                                             incluindo estatísticas relevantes na tabela. Mostre apenas as equipes mencionadas na 
                                                             aposta principal.
-    
+
                                                             ## 2. Dicas de Apostas:
                                                             - Abaixo, apresente uma tabela com as equipes e, ao lado, as respectivas apostas.
-    
+
                                                               | Time             | Aposta                  |
                                                               |------------------|------------------------|
                                                               | Casa: `{home_team_name}`  | `sua_dica_para_a_aposta` |
                                                               | Visitante: `{away_team_name}` | `sua_dica_para_a_aposta` |
-    
+
                                                             - Com base no seguinte JSON, forneça sua dica:
                                                               `{str(predictions)}`
                                                             ## 3. Estatísticas Adicionais:
@@ -921,24 +936,24 @@ def main_page(controller):
                                                             - Utilize uma escala de 0 a 1, onde 0 representa segurança extrema e 1 representa 
                                                             risco extremo. A temperatura escolhida é `{bet_temperature}`. Não mencione a temperatura 
                                                             diretamente; apenas a aplique em suas sugestões.
-    
+
                                                             ## 5. Sugestões de Apostas Adicionais:
                                                             - Forneça pelo menos uma sugestão adicional de aposta. Se a temperatura for acima 
                                                             da média, ofereça opções mais arriscadas com base nas estatísticas. Apresente essas 
                                                             apostas em uma tabela separada, numerada. 
                                                             - Para sugestões de under/over gols, mencione o jogo se for geral e o time 
                                                             específico se for uma aposta focada.
-    
+
                                                               Exemplos de sugestões com base na temperatura:
                                                               - Temperatura 0: uma sugestão bastante segura.
                                                               - Temperatura 0.5: uma ou duas sugestões.
                                                               - Temperatura 1: três ou mais sugestões.
-    
+
                                                             ## 6. Tendências de Gols:
                                                             - Se os dados do JSON e das tabelas indicarem uma tendência de under gols, não 
                                                             sugira apostas de over. 
                                                             - Se indicarem uma tendência de over gols, evite sugerir under.
-    
+
                                                             ## 7. Ousadia nas Sugestões:
                                                             - Se a temperatura estiver alta, seja ousado nas sugestões. Se a tendência for over, 
                                                             considere incrementar a linha de gols. 
@@ -967,6 +982,7 @@ def main_page(controller):
         st.write("Você não está logado. Refaça o login")
         login(controller)
         st.rerun()
+
 
 def admin_page():
     conn = mysql.connector.connect(
@@ -1068,7 +1084,8 @@ def admin_page():
         st.dataframe(df_acessos)
 
         # Selecionar um cliente para editar acesso
-        cliente_edit = st.selectbox("Selecione o ID do Cliente para editar acesso:", df_acessos["ID do Cliente"].unique())
+        cliente_edit = st.selectbox("Selecione o ID do Cliente para editar acesso:",
+                                    df_acessos["ID do Cliente"].unique())
 
         # Verificar se o cliente já possui um acesso
         cursor.execute("SELECT * FROM acesso_cliente WHERE cliente_id = %s", (cliente_edit,))
@@ -1102,7 +1119,7 @@ def main():
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
     # Obtem a data de vencimento do controlador de cookies
-    data_vencimento = controller.get('data_limite')  # Supondo que você tenha armazenado a data de vencimento aqui
+    data_vencimento = controller.get('data_limite')
 
     if isinstance(data_vencimento, str):
         try:
@@ -1121,17 +1138,18 @@ def main():
     if logged_in is True:
         main_page(controller)
     elif logged_in is False:
-        st.sidebar.title("Menu")
-        opcao = st.sidebar.radio("Selecione uma opção", ["Login", "Criar Conta"])
-        if opcao == "Login":
-            login(controller)  # Passa o controlador de cookies para a função de login
-        elif opcao == "Criar Conta":
+        if st.session_state['screen'] == 'login':
+            login(controller)
+        elif st.session_state['screen'] == 'criar_conta':
             criar_nova_conta()
+        else:
+            main_page(controller)
     else:
         if st.button('Primeiro login?'):
             controller.set('logged_in', False)
             st.rerun()
-        st.sidebar.image('logo_atualizada.png', use_column_width=True)
+        st.image('logo_atualizada.png', use_column_width=True)
+
 
 if __name__ == "__main__":
     main()
