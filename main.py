@@ -488,6 +488,16 @@ def main_page(controller):
         # Timezone padrão
         default_timezone = "America/Sao_Paulo"
         selected_timezone = default_timezone
+        timezone = pytz.timezone(selected_timezone)
+
+        # Selecionar a data do jogo
+        today = datetime.now(timezone).date()
+        date = st.sidebar.date_input(
+            "Selecione a data do jogo desejado:",
+            today,
+            min_value=today,  # opcional: define a data mínima como hoje
+            format="DD/MM/YYYY"
+        )
 
         # Simulação de uma data de vencimento
         data_vencimento = controller.get('data_limite')
@@ -501,12 +511,12 @@ def main_page(controller):
             st.sidebar.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
                         unsafe_allow_html=True)
 
-        # Definir o timezone do Brasil
-        br_tz = pytz.timezone('America/Sao_Paulo')
+        # # Selecionar a data do jogo
+        # date = st.sidebar.date_input("Selecione a data do jogo desejado:", pd.to_datetime('today').tz_localize(br_tz),
+        #                              format="DD/MM/YYYY")
 
-        # Selecionar a data do jogo
-        date = st.sidebar.date_input("Selecione a data do jogo desejado:", pd.to_datetime('today').tz_localize(br_tz),
-                                     format="DD/MM/YYYY")
+        timezone = pytz.timezone(selected_timezone)
+        date = datetime.now(timezone).strftime('%d-%m-%Y')
 
         # Extraindo o ano da data escolhida para a temporada
         season = pd.to_datetime(date).year
