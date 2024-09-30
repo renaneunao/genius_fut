@@ -10,6 +10,7 @@ import mysql.connector
 from PIL import Image, ImageDraw
 import base64
 import pytz
+import time
 
 from streamlit_extras.colored_header import colored_header
 from streamlit_extras.bottom_container import bottom
@@ -1119,6 +1120,24 @@ def admin_page():
 def main():
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
+    print(logged_in)
+    attempt_count = 0  # Contador de tentativas de login
+
+    while logged_in is None:
+        logged_in = controller.get('logged_in')
+        attempt_count += 1
+
+        # Pausa para evitar sobrecarga no processamento
+        time.sleep(0.1)  # Aguarda 1 segundo antes de verificar novamente
+
+        # Se o contador de tentativas bater 5, seta logged_in como False
+        if attempt_count >= 5:
+            controller.set('logged_in', False)
+            logged_in = False  # Sai do loop
+
+        # Pausa para evitar sobrecarga no processamento
+        time.sleep(1)
+
     # Obtem a data de vencimento do controlador de cookies
     data_vencimento = controller.get('data_limite')
 
