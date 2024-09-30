@@ -309,6 +309,7 @@ def login(controller):
             st.rerun()
 
 def main_page(controller):
+    controller.set('logged_in', True)
     selected_country = None
     selected_league = None
     fixture_id = None
