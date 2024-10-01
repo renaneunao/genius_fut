@@ -951,7 +951,7 @@ def main_page(controller):
                                 # Mostrar DataFrame no Streamlit
                                 if not df_bets.empty:
                                     pass
-                                    st.write(df_bets)
+                                    # st.write(df_bets)
                                 else:
                                     df_bets = 'Nenhuma bet. Desconsiderar.'
                                     st.warning("Nenhuma odd encontrada para as casas e bets selecionadas.")
