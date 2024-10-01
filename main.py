@@ -951,7 +951,7 @@ def main_page(controller):
                                 # Mostrar DataFrame no Streamlit
                                 if not df_bets.empty:
                                     pass
-                                    # st.write(df_bets)
+                                    st.write(df_bets)
                                 else:
                                     df_bets = 'Nenhuma bet. Desconsiderar.'
                                     st.warning("Nenhuma odd encontrada para as casas e bets selecionadas.")
@@ -1052,6 +1052,7 @@ def main_page(controller):
                 aposta principal.
 
                 ## 2. Dicas de Apostas:
+                !! Nunca ofereça odd 1, principalmente na bet principal!!
                 Definição de combos de apostas:
                 (uma ou mais apostas que, ao serem combinadas, formam uma dupla ou uma múltipla, onde as odds 
                 são multiplicadas, formando uma odd resultante. Exemplo:
