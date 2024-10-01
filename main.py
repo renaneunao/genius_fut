@@ -19,6 +19,7 @@ from streamlit_extras.grid import grid
 
 administrador = 'Renan Barbosa Silva Vianna'
 dias_acesso = 3
+premium = False
 
 st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")
 # Remover o botão de Deploy e ajustar o espaço em branco
@@ -312,20 +313,16 @@ def login(controller):
 def main_page(controller):
     print(f'Logged_In: {controller.get('logged_in')}')
     print(f'Cliente: {controller.get('cliente_id')}')
-    time.sleep(3)
     selected_country = None
     selected_league = None
     fixture_id = None
-    home_team_stats = None
-    away_team_stats = None
     home_team_name = None
     away_team_name = None
     predictions = None
-    home_team_last_5_results = None
-    away_team_last_5_results = None
     home_team_logo_url = None
     away_team_logo_url = None
     selected_game_info = None
+
     # Exibir a imagem na sidebar
     st.sidebar.image('logo_atualizada.png', use_column_width=True)
 
@@ -596,6 +593,28 @@ def main_page(controller):
                 # Return default values if no data is available
                 return 'N/A', 'N/A', 'No data available', 'No advice available', 'No data available', 'No data available', 'No advice available', None, None
 
+        @st.cache_data  # Cache para armazenar a lista de casas de apostas
+        def get_bookmakers(fixture_id):
+            querystring = {"fixture": fixture_id}
+            response = requests.get(url, headers=headers, params=querystring)
+
+            if response.status_code == 200:
+                odds_data = response.json()
+                return [bookmaker["name"] for bookmaker in odds_data["response"][0]["bookmakers"]]
+            else:
+                st.error("Erro ao buscar odds. Verifique o ID do fixture.")
+                return []
+
+        @st.cache_data  # Cache para armazenar odds
+        def fetch_odds(fixture_id):
+            response = requests.get(url, headers=headers, params={"fixture": fixture_id})
+
+            if response.status_code == 200:
+                return response.json()
+            else:
+                st.error("Erro ao buscar odds. Verifique o ID do fixture.")
+                return None
+
         # Sidebar para configurações
         with st.sidebar.expander("Configurações Gerais"):
             st.title("Configurações Gerais")
@@ -675,6 +694,53 @@ def main_page(controller):
                 """, unsafe_allow_html=True)
             controller.set('bet_temperature', bet_temperature)
 
+            ######################## CONFIGURAÇÃO PARA ADICIONAR ODD
+
+            # Configurar a chave da API e a URL
+            url = "https://api-football-v1.p.rapidapi.com/v3/odds"
+            headers = {
+                "x-rapidapi-key": "2197625affmsh6db1f3afb876a8ep153650jsn3f9195067c24",
+                "x-rapidapi-host": "api-football-v1.p.rapidapi.com"
+            }
+
+            # Listas de grupos de bets categorizados
+            bets_gols = [
+                "Anytime Goal Scorer", "Both Teams Score", "Both Teams Score - First Half",
+                "Both Teams To Score - Second Half", "Both Teams to Score in Both Halves",
+                "Goals Over/Under", "Goals Over/Under - Second Half",
+                "Goals Over/Under First Half", "Exact Goals Number", "Exact Goals Number - First Half",
+                "Total Goals By Ranges (1st Half)", "To Score In 1st Half", "To Score in Both Halves",
+                "Team To Score First", "Home Team Score a Goal", "Away Team Score a Goal",
+                "Home Team Score a Goal (1st Half)", "Away Team Score a Goal (1st Half)",
+                "Home Team Score a Goal (2nd Half)", "Away Team Score a Goal (2nd Half)",
+                "Home team will score in both halves", "Away team will score in both halves"
+            ]
+
+            bets_escanteios = [
+                "Away Corners Over/Under", "Corners 1x2", "Corners 1x2 (1st Half)", "Corners 1x2 (2nd Half)",
+                "Corners Asian Handicap", "Corners Asian Handicap (1st Half)", "Corners Asian Handicap (2nd Half)",
+                "Corners Over Under", "First Corner", "Home Total Corners (1st Half)", "Home Total Corners (2nd Half)",
+                "Away Total Corners (1st Half)", "Away Total Corners (2nd Half)", "Total Corners (1st Half)",
+                "Total Corners (2nd Half)", "Total Corners (3 way)", "Total Corners (3 way) (1st Half)",
+                "Total Corners (3 way) (2nd Half)"
+            ]
+
+            bets_cartoes = [
+                "Away Team Total Cards", "Home Team Total Cards", "Cards Asian Handicap", "Cards European Handicap",
+                "Cards Over/Under", "Red Cards Over/Under", "Yellow Cards 1x2", "Yellow Cards 1x2 (1st Half)",
+                "Yellow Cards 1x2 (2nd Half)", "Yellow Asian Handicap", "Yellow Asian Handicap (1st Half)",
+                "Yellow Asian Handicap (2nd Half)", "Yellow Odd/Even", "Yellow Over/Under",
+                "Yellow Over/Under (1st Half)",
+                "RCARD"
+            ]
+
+            # Mapeamento de grupos de bets
+            bet_groups = {
+                "Bets de Gols": bets_gols,
+                "Bets de Escanteios": bets_escanteios,
+                "Bets de Cartões": bets_cartoes
+            }
+
             # Obtém o valor da odd mínima configurada
             min_odd_value = controller.get('min_odd_value')
 
@@ -723,7 +789,41 @@ def main_page(controller):
             # Armazena o valor da odd mínima no controller
             controller.set('min_odd_value', min_odd)
 
-            st.write(min_odd)
+            if premium:
+                default_bookmakers = ["Betfair", "Bet365", "Betano"]
+                help = 'Selecione até 3 casas de apostas'
+                max_selections = 3
+                default_group_bets = ['Bets de Gols', 'Bets de Escanteios', 'Bets de Cartões']
+            else:
+                default_bookmakers = ["Bet365"]
+                help = 'Selecione 1 casa de apostas'
+                max_selections = 1
+                default_group_bets = ['Bets de Gols']
+
+            bookmakers_list = get_bookmakers('1180631')
+            selected_bookmakers = st.multiselect(
+                "Escolha até 3 casas de apostas:",
+                options=bookmakers_list,
+                default=[bm for bm in default_bookmakers if bm in bookmakers_list],  # Seleciona as casas padrão
+                max_selections=max_selections,
+                help=help
+            )
+
+            # Permitir ao usuário selecionar múltiplos grupos de bets
+            selected_groups = st.multiselect(
+                "Selecione um ou mais grupos de bets:",
+                options=list(bet_groups.keys()),
+                max_selections=1,
+                default=[bet for bet in default_group_bets if bet in list(bet_groups.keys())],
+                # Seleciona as casas padrão
+            )
+
+            # Expandir os grupos selecionados para incluir todas as bets
+            selected_bets = []
+            for group in selected_groups:
+                selected_bets.extend(bet_groups[group])
+
+            ######################### CONFIGURAÇÃO PARA ADICIONAR ODD
 
             # Cria um expander para o timezone
             with st.sidebar.expander(f"Horários de {default_timezone}", expanded=False):
@@ -824,6 +924,38 @@ def main_page(controller):
                             )
                             # Imprimir o fixture_id selecionado
                             print(f"Fixture ID selecionado: {fixture_id}")
+
+                            odds_data = fetch_odds(fixture_id)
+
+                            if odds_data:
+                                data = []
+
+                                for bookmaker in odds_data["response"][0]["bookmakers"]:
+                                    if bookmaker["name"] in selected_bookmakers:  # Filtrar pelas casas selecionadas
+                                        for bet in bookmaker["bets"]:
+                                            bet_name = bet["name"]  # Nome da bet
+                                            if bet_name in selected_bets:  # Verificar se a bet está no grupo selecionado
+                                                for value in bet["values"]:
+                                                    odd_value = float(value["odd"])
+                                                    if odd_value >= min_odd:  # Aplicar o filtro da odd mínima
+                                                        data.append({
+                                                            "Casa": bookmaker["name"],
+                                                            "Bet": bet_name,  # Adicionar o nome da bet
+                                                            "Valor": value["value"],
+                                                            "Odd": value["odd"]
+                                                        })
+
+                                # Criar DataFrame
+                                df_bets = pd.DataFrame(data)
+
+                                # Mostrar DataFrame no Streamlit
+                                if not df_bets.empty:
+                                    pass
+                                    # st.write(df_bets)
+                                else:
+                                    df_bets = 'Nenhuma bet. Desconsiderar.'
+                                    st.warning("Nenhuma odd encontrada para as casas e bets selecionadas.")
+
                     else:
                         st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
                         # pass
@@ -905,66 +1037,91 @@ def main_page(controller):
 
             prompt = (
                 f"""
-                                                            ### 1. Orientações para Resposta:
+                ### 1. Orientações para Resposta:
 
-                                                            - **Linguagem**: Responda sempre no idioma selecionado: `{selected_language}`.
-                                                            - **Personalização**: Dirija-se a mim pelo meu nome: `{user_name}` 
-                                                            (se o nome não estiver disponível, ignore).
-                                                            - **Especialização**: Você é um especialista em apostas online, focado em fornecer 
-                                                            dicas valiosas com base nas informações disponíveis.
-                                                            - **Confiança**: Responda com a confiança de um profissional experiente em apostas, 
-                                                            alinhando sua resposta ao conteúdo fornecido.
-                                                            - **Ambiente**: Mantenha um tom descontraído e destaque a aposta principal.
-                                                            - **Cálculo de Aposta**: Apresente a aposta como resultado de uma análise cuidadosa, 
-                                                            incluindo estatísticas relevantes na tabela. Mostre apenas as equipes mencionadas na 
-                                                            aposta principal.
+                - **Linguagem**: Responda sempre no idioma selecionado: `{selected_language}`.
+                - **Personalização**: Dirija-se a mim pelo meu nome: `{user_name}` 
+                (se o nome não estiver disponível, ignore).
+                - **Especialização**: Você é um especialista em apostas online, focado em fornecer 
+                dicas valiosas com base nas informações disponíveis.
+                - **Confiança**: Responda com a confiança de um profissional experiente em apostas, 
+                alinhando sua resposta ao conteúdo fornecido.
+                - **Ambiente**: Mantenha um tom descontraído e destaque a aposta principal.
+                - **Cálculo de Aposta**: Apresente a aposta como resultado de uma análise cuidadosa, 
+                incluindo estatísticas relevantes na tabela. Mostre apenas as equipes mencionadas na 
+                aposta principal.
 
-                                                            ## 2. Dicas de Apostas:
-                                                            - Abaixo, apresente uma tabela com as equipes e, ao lado, as respectivas apostas.
+                ## 2. Dicas de Apostas:
+                Definição de combos de apostas:
+                (uma ou mais apostas que, ao serem combinadas, formam uma dupla ou uma múltipla, onde as odds 
+                são multiplicadas, formando uma odd resultante. Exemplo:
+                Vencedor Visitante odd 1.2 + Mais de dois gols no jogo odd 1.5. Odd resultante = [1.2 * 1.5 = 1.8].
+                portanto, odd final = 1.8)
+                - Abaixo, apresente uma tabela com as equipes e, ao lado, as respectivas apostas.
+                - Procure na tabela de odds que será enviada o valor das odds das apostas principais, 
+                e adicione à tabela se existirem. 
+                Considere que o time da casa é: {home_team_name}
+                Considere que o time visitante é: {away_team_name}.
 
-                                                              | Time             | Aposta                  |
-                                                              |------------------|------------------------|
-                                                              | Casa: `{home_team_name}`  | `sua_dica_para_a_aposta` |
-                                                              | Visitante: `{away_team_name}` | `sua_dica_para_a_aposta` |
+                  | Time             | Aposta                  | ODD      | Casa de Apostas
+                  |------------------|------------------------|--------|----------|
+                  | Time Envolvido: ``  | `sua_dica_para_a_aposta` | `odd final` | `Casa de Apostas`
+                  
+                Caso a aposta principal seja uma dupla ou múltipla, mostre uma tabela com as odds individuais e resultante do combo.
 
-                                                            - Com base no seguinte JSON, forneça sua dica:
-                                                              `{str(predictions)}`
-                                                            ## 3. Estatísticas Adicionais:
-                                                            - Utilize as estatísticas adicionais para enriquecer sua resposta                                      
-                                                              Considere as seguintes informações:
-                                                              - Resultados dos últimos 5 jogos do time da casa: `{home_team_last_5_results}`.
-                                                              - Resultados dos últimos 5 jogos do time visitante: `{away_team_last_5_results}`.
-                                                              - Estatísticas do time da casa: `{stats_casa}` (dataframe).
-                                                              - Estatísticas do time visitante: `{stats_fora}` (dataframe).
-                                                            ## 4. Temperatura da Aposta:
-                                                            - Utilize uma escala de 0 a 1, onde 0 representa segurança extrema e 1 representa 
-                                                            risco extremo. A temperatura escolhida é `{bet_temperature}`. Não mencione a temperatura 
-                                                            diretamente; apenas a aplique em suas sugestões.
 
-                                                            ## 5. Sugestões de Apostas Adicionais:
-                                                            - Forneça pelo menos uma sugestão adicional de aposta. Se a temperatura for acima 
-                                                            da média, ofereça opções mais arriscadas com base nas estatísticas. Apresente essas 
-                                                            apostas em uma tabela separada, numerada. 
-                                                            - Para sugestões de under/over gols, mencione o jogo se for geral e o time 
-                                                            específico se for uma aposta focada.
+                - Com base no seguinte JSON, alimente seu conhecimento (não mencione o JSON):
+                  `{str(predictions)}`
+                ## 3. Estatísticas Adicionais:
+                - Utilize as estatísticas adicionais para enriquecer sua resposta                                      
+                  Considere as seguintes informações:
+                  - Resultados dos últimos 5 jogos do time da casa: `{home_team_last_5_results}`.
+                  - Resultados dos últimos 5 jogos do time visitante: `{away_team_last_5_results}`.
+                  - Estatísticas do time da casa: `{stats_casa}` (dataframe).
+                  - Estatísticas do time visitante: `{stats_fora}` (dataframe).
+                ## 4. Temperatura da Aposta:
+                - Utilize uma escala de 0 a 1, onde 0 representa segurança extrema e 1 representa 
+                risco extremo. A temperatura escolhida é `{bet_temperature}`. Não mencione a temperatura 
+                diretamente; apenas a aplique em suas sugestões.
 
-                                                              Exemplos de sugestões com base na temperatura:
-                                                              - Temperatura 0: uma sugestão bastante segura.
-                                                              - Temperatura 0.5: uma ou duas sugestões.
-                                                              - Temperatura 1: três ou mais sugestões.
+                ## 5. Sugestões de Apostas Adicionais:
+                - Agora é a parte mais importante. Vou te passar uma tabela com os dados das apostas.
+                Nessa tabela temos as casas de apostas, os nomes das bets, o valor específico da bet, 
+                e a odd da bet.
+                - Com base na temperatura, você fornecerá bets adicionais. 
+                - Forneça pelo menos uma sugestão adicional de aposta. Se a temperatura for acima 
+                da média, ofereça opções mais arriscadas com base nas estatísticas. Apresente essas 
+                apostas em uma tabela separada, numerada. 
+                - Para sugestões de under/over gols, mencione o jogo se for geral e o time 
+                específico se for uma aposta focada.
 
-                                                            ## 6. Tendências de Gols:
-                                                            - Se os dados do JSON e das tabelas indicarem uma tendência de under gols, não 
-                                                            sugira apostas de over. 
-                                                            - Se indicarem uma tendência de over gols, evite sugerir under.
+                  Exemplos de sugestões com base na temperatura:
+                  - Temperatura 0: uma sugestão bastante segura (talvez uma dupla desde que seja segura).
+                  - Temperatura 0.5: uma ou duas sugestões (sendo uma dupla e uma simples, ou até uma multipla, sempre mantendo a segurança).
+                  - Temperatura 1: três ou mais sugestões (Seja ousado. Monte simples, duplas e uma multipla, sempre mantendo a segurança).
+                    
+                Se as apostas incluírem duplas ou multiplas, dê a odd final sendo a multiplicação delas. 
 
-                                                            ## 7. Ousadia nas Sugestões:
-                                                            - Se a temperatura estiver alta, seja ousado nas sugestões. Se a tendência for over, 
-                                                            considere incrementar a linha de gols. 
-                                                              - Exemplos:
-                                                                - Para uma tendência under de -3.5 gols, a sugestão pode ser -2.5 gols.
-                                                                - Para uma tendência over de +2.5 gols, a sugestão pode ser +3.5 gols.
-                                                            """
+                ## 6. Tendências de Gols:
+                - Se os dados do JSON e das tabelas indicarem uma tendência de under gols, não 
+                sugira apostas de over. 
+                - Se indicarem uma tendência de over gols, evite sugerir under.
+
+                ## 7. Ousadia nas Sugestões:
+                - Se a temperatura estiver alta, seja ousado nas sugestões. Se a tendência for over, 
+                considere incrementar a linha de gols. 
+                  - Exemplos:
+                    - Para uma tendência under de -3.5 gols, a sugestão pode ser -2.5 gols.
+                    - Para uma tendência over de +2.5 gols, a sugestão pode ser +3.5 gols.
+                    
+                ## 8. Resultados:
+                - Como resultado final das apostas adicionais, espero uma tabela informando a bet,
+                a casa de aposta, os envolvidos, e a odd (individual de cada bet e o resultado da multiplicação)
+                
+                Segue agora tabela com as ODDS:
+                {df_bets}
+                    
+                """
             )
 
             llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai)
