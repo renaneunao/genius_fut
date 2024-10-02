@@ -1345,10 +1345,12 @@ def main():
         # Verifica se a data de vencimento é menor que a data atual
         if data_vencimento is not None and data_vencimento < datetime.today():
             st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
+            time.sleep(3)
             # Trecho desabilitado por enquanto. Criar depois uma lógica de vendas integrada.
             # controller.set('logged_in', False)  # Redefine o estado de login
             # controller.set('cliente_id', False)
             # login(controller)
+            main_page(controller) # Trecho adicionado para passar pelo bug, remover depois.
         else:
             main_page(controller)
     elif logged_in is False:
