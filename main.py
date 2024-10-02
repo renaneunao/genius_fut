@@ -1342,6 +1342,7 @@ def main():
     if data_vencimento is not None and data_vencimento < datetime.today():
         st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
         controller.set('logged_in', False)  # Redefine o estado de login
+        controller.set('cliente_id', False)
         login(controller)
         st.rerun()  # Redireciona para a tela de login
 
@@ -1353,7 +1354,7 @@ def main():
         elif st.session_state['screen'] == 'criar_conta':
             criar_nova_conta()
         else:
-            main_page(controller)
+            login(controller)
     else:
         if st.button('Primeiro login?'):
             controller.set('logged_in', False)
