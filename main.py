@@ -1078,6 +1078,9 @@ def main_page(controller):
 
                 ## 2. Dicas de Apostas:
                 !! Nunca ofereça odd 1, principalmente na bet principal!!
+                !! Não ofereça bets nos dois times. Por exemplo, se voce disser que o time da casa vai vencer,
+                não ofereça outra bet dizendo que o time visitante vai fazer mais gols. Observe atentamente
+                para manter a lógica. Não ofereça bets opostas. Sempre mantenha uma linha apostas, e não opostas.
                 Definição de combos de apostas:
                 (uma ou mais apostas que, ao serem combinadas, formam uma dupla ou uma múltipla, onde as odds 
                 são multiplicadas, formando uma odd resultante. Exemplo:
