@@ -548,10 +548,7 @@ def main_page(controller):
                 return df
             else:
                 st.write(f"Estatísticas para {team_name} não disponíveis.")
-        else:
-            st.write('Cliente não encontrado. Verificar essa rota depois')
-            
-
+    
         # Sidebar para timezone
         timezones = fetch_timezones()
 
@@ -1202,8 +1199,8 @@ def main_page(controller):
         controller.set('cliente_id', False)
         st.image('logo_atualizada.png', use_column_width=True)
         st.write("Você não está logado. Refaça o login")
-        login(controller)
-        st.rerun()
+        if st.button('Refaça o login'):
+            login(controller)
 
 
 def admin_page():
