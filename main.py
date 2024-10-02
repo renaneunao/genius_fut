@@ -1379,6 +1379,6 @@ if __name__ == "__main__":
         print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
         time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
         contador += 1
-        if contador == 10
+        if contador == 10:
             break
     main()
