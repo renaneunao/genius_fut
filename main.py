@@ -1341,16 +1341,15 @@ def main():
             st.error("Formato de data inválido.")
             data_vencimento = None
 
-    # Verifica se a data de vencimento é menor que a data atual
-    if data_vencimento is not None and data_vencimento < datetime.today():
-        st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
-        controller.set('logged_in', False)  # Redefine o estado de login
-        controller.set('cliente_id', False)
-        login(controller)
-        st.rerun()  # Redireciona para a tela de login
-
     if logged_in is True:
-        main_page(controller)
+        # Verifica se a data de vencimento é menor que a data atual
+        if data_vencimento is not None and data_vencimento < datetime.today():
+            st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
+            controller.set('logged_in', False)  # Redefine o estado de login
+            controller.set('cliente_id', False)
+            login(controller)
+        else:
+            main_page(controller)
     elif logged_in is False:
         if st.session_state['screen'] == 'login':
             login(controller)
