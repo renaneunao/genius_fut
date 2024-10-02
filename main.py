@@ -272,8 +272,8 @@ def login(controller):
     time.sleep(10)
 
     st.title("Login")
-    usuario = st.text_input("Usuário")
-    senha = st.text_input("Senha", type='password')
+    usuario = st.text_input("Usuário", key='text_input_usuario_login')
+    senha = st.text_input("Senha", type='password', key='text_input_password_login')
 
     col1, col2 = st.columns(2)
     with col1:
@@ -1345,9 +1345,10 @@ def main():
         # Verifica se a data de vencimento é menor que a data atual
         if data_vencimento is not None and data_vencimento < datetime.today():
             st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
-            controller.set('logged_in', False)  # Redefine o estado de login
-            controller.set('cliente_id', False)
-            login(controller)
+            # Trecho desabilitado por enquanto. Criar depois uma lógica de vendas integrada.
+            # controller.set('logged_in', False)  # Redefine o estado de login
+            # controller.set('cliente_id', False)
+            # login(controller)
         else:
             main_page(controller)
     elif logged_in is False:
