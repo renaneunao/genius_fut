@@ -257,6 +257,7 @@ def login(controller):
     logged_in = controller.get('logged_in')
     if not logged_in:
         controller.set('logged_in', False, 'ck_logged_in')
+        controller.set('cliente_id', False)
 
     st.title("Login")
     usuario = st.text_input("Usuário")
