@@ -252,12 +252,21 @@ def add_rounded_corners(image_path, radius):
 
 
 def login(controller):
-    print(f'Logged_In Login: {controller.get('logged_in')}')
-    print(f'Cliente Login: {controller.get('cliente_id')}')
+    print(f'Logged_In Login: {controller.get("logged_in")}')
+    print(f'Cliente Login: {controller.get("cliente_id")}')
+    
     logged_in = controller.get('logged_in')
+    
     if not logged_in:
-        controller.set('logged_in', False, 'ck_logged_in')
+        controller.set('logged_in', False)
         controller.set('cliente_id', False)
+        
+        # Aguardar até que o cliente_id seja False
+        while controller.get('cliente_id') is None:
+            print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
+            time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
+        
+        print(f'cliente_id agora é {controller.get('cliente_id')}. Saindo do loop.')
 
     st.title("Login")
     usuario = st.text_input("Usuário")
