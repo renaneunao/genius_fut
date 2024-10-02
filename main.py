@@ -268,8 +268,8 @@ def login(controller):
         
         print(f'cliente_id agora é {controller.get('cliente_id')}. Saindo do loop.')
 
-    # print(f'Aqui eu deveria carregar todo o conteudo da pagina login')
-    # time.sleep(10)
+    print(f'Aqui eu deveria carregar todo o conteudo da pagina login')
+    time.sleep(10)
 
     st.title("Login")
     usuario = st.text_input("Usuário", key='text_input_usuario_login')
