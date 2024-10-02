@@ -386,8 +386,18 @@ def main_page(controller):
     )
 
     controller.set('logged_in', True, 'ck_logged_in')
+    
+    # Aguardar até que o cliente_id seja False
+    while controller.get('cliente_id') is None:
+        print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
+        time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
+    # Aguardar até que o cliente_id seja False
+    while controller.get('logged_in') is None:
+        print(f'Aguardando logged_in ser False. Valor atual: {controller.get("logged_in")}')
+        time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
+    
     cliente_id = controller.get('cliente_id')
-    if cliente_id is not None:
+    if cliente_id:
         conn = mysql.connector.connect(
             host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
             user='renaneunao',
@@ -538,6 +548,9 @@ def main_page(controller):
                 return df
             else:
                 st.write(f"Estatísticas para {team_name} não disponíveis.")
+        else:
+            st.write('Cliente não encontrado. Verificar essa rota depois')
+            
 
         # Sidebar para timezone
         timezones = fetch_timezones()
