@@ -252,27 +252,23 @@ def add_rounded_corners(image_path, radius):
 
 
 def login(controller):
-    print(f'Logged_In Login: {controller.get("logged_in")}')
-    print(f'Cliente Login: {controller.get("cliente_id")}')
-    
+    print(f'Logged_In Main: {controller.get('logged_in')}')
+    print(f'Cliente Main: {controller.get('cliente_id')}')
+    # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
+    cliente_id = controller.get('logged_in')
 
-    # Aguardar até que o cliente_id seja False
-    while controller.get('cliente_id') is None:
-        print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
-        time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
-    # Aguardar até que o cliente_id seja False
-    while controller.get('logged_in') is None:
-        print(f'Aguardando logged_in ser False. Valor atual: {controller.get("logged_in")}')
-        time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
+    while logged_in is None:
+        logged_in = controller.get('logged_in')
+        # Pausa para evitar sobrecarga no processamento
+        time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
+        st.write('Aguarde. Carregando inicialização')
+    while cliente_id is None:
+        logged_in = controller.get('cliente_id')
+        # Pausa para evitar sobrecarga no processamento
+        time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
+        st.write('Aguarde. Carregando especificações do cliente')
     
-    if not logged_in:
-        controller.set('logged_in', False)
-        controller.set('cliente_id', False)
-
-
-    # print(f'Aqui eu deveria carregar todo o conteudo da pagina login')
-    # time.sleep(10)
 
     st.title("Login")
     usuario = st.text_input("Usuário", key='text_input_usuario_login')
@@ -341,17 +337,6 @@ def login(controller):
 def main_page(controller):
     print(f'Logged_In Main Page: {controller.get('logged_in')}')
     print(f'Cliente Main Page: {controller.get('cliente_id')}')
-    while controller.get('cliente_id') is None:
-        print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
-        time.sleep(10)  # Aguardar 1 segundo antes de verificar novamente
-        contador += 1
-        if st.button('Refaça o login, por favor'):
-            controller.set('cliente_id', False)
-            controller.set('logged_in', False)
-            login(controller)
-            st.rerun()
-        if contador == 10:
-            break
         
     selected_country = None
     selected_league = None
@@ -384,17 +369,7 @@ def main_page(controller):
         """,
         unsafe_allow_html=True
     )
-
-    controller.set('logged_in', True, 'ck_logged_in')
     
-    # Aguardar até que o cliente_id seja False
-    while controller.get('cliente_id') is None:
-        print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
-        time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
-    # Aguardar até que o cliente_id seja False
-    while controller.get('logged_in') is None:
-        print(f'Aguardando logged_in ser False. Valor atual: {controller.get("logged_in")}')
-        time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
     
     cliente_id = controller.get('cliente_id')
     if cliente_id:
@@ -890,7 +865,7 @@ def main_page(controller):
         if st.sidebar.button("Sair da Conta", key="logout_btn"):
             # Remover ou setar como falso o cookie de logged_in
             controller.set('logged_in', False)  # Remover o estado de login
-            controller.set('cliente_id', None)  # Opcional: limpar o cliente_id
+            controller.set('cliente_id', False)  # Opcional: limpar o cliente_id
             # Redirecionar para a página de login
             st.success("Você saiu da conta.")
             login(controller)
@@ -1340,23 +1315,18 @@ def main():
     print(f'Cliente Main: {controller.get('cliente_id')}')
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
-    attempt_count = 0  # Contador de tentativas de login
+    cliente_id = controller.get('logged_in')
 
     while logged_in is None:
         logged_in = controller.get('logged_in')
-        attempt_count += 1
-
         # Pausa para evitar sobrecarga no processamento
-        time.sleep(0.1)  # Aguarda 1 segundo antes de verificar novamente
-
-        # Se o contador de tentativas bater 5, seta logged_in como False
-        if attempt_count >= 5:
-            controller.set('logged_in', False)
-            controller.set('cliente_id', False)
-            logged_in = False  # Sai do loop
-
+        time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
+        st.write('Aguarde. Carregando inicialização')
+    while cliente_id is None:
+        logged_in = controller.get('cliente_id')
         # Pausa para evitar sobrecarga no processamento
-        time.sleep(1)
+        time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
+        st.write('Aguarde. Carregando especificações do cliente')
 
     # Obtem a data de vencimento do controlador de cookies
     data_vencimento = controller.get('data_limite')
@@ -1388,22 +1358,19 @@ def main():
             criar_nova_conta()
         else:
             login(controller)
-    else:
-        if st.button('Primeiro login?'):
-            controller.set('logged_in', False)
-            st.rerun()
-        st.image('logo_atualizada.png', use_column_width=True)
-
+        
 
 if __name__ == "__main__":
-    print(f'Logged_In main=main: {controller.get('logged_in')}')
-    print(f'Cliente main=main: {controller.get('cliente_id')}')
-    # Aguardar até que o cliente_id seja False
-    contador = 0
-    while controller.get('cliente_id') is None:
-        print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
-        time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
-        contador += 1
-        if contador == 10:
-            break
+    print(f'Logged_In Main: {controller.get('logged_in')}')
+    print(f'Cliente Main: {controller.get('cliente_id')}')
+    # Verifica se o usuário está logado
+    logged_in = controller.get('logged_in')
+    if logged_in is None:
+        if st.button('Primeiro login?'):
+            if 'screen' not in st.session_state:
+                st.session_state['screen'] = 'login'
+            controller.set('logged_in', False)
+            controller.set('cliente_id', False)
+            st.rerun()
+        st.image('logo_atualizada.png', use_column_width=True)
     main()
