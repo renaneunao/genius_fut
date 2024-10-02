@@ -252,6 +252,8 @@ def add_rounded_corners(image_path, radius):
 
 
 def login(controller):
+    controller.set('logged_in', False)  # Remover o estado de login
+    controller.set('cliente_id', False)  # Opcional: limpar o cliente_id
     print(f'Logged_In Main: {controller.get('logged_in')}')
     print(f'Cliente Main: {controller.get('cliente_id')}')
     # Verifica se o usuário está logado
