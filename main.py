@@ -882,7 +882,7 @@ def main_page(controller):
             """
             <style>
             /* Seleciona o elemento específico do bottom */
-            #root > div:nth-child(1) > div.withScreencast > div > div > div > section.stAppViewMain.main.st-emotion-cache-bm2z3a.ea3mdgi8 > div.st-emotion-cache-1p2n2i4.ea3mdgi7 > div > div > div {
+                #root > div:nth-child(1) > div.withScreencast > div > div > div > section.stMain.st-emotion-cache-bm2z3a.ea3mdgi8 > div.stBottom.st-emotion-cache-1p2n2i4.ea3mdgi7 > div > div > div {
                 max-width: 14000px;  /* Define a largura máxima */
                 max-height: 50px;  /* Define a altura máxima */
                 margin: auto;  /* Centraliza o container */
