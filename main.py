@@ -256,17 +256,20 @@ def login(controller):
     print(f'Cliente Login: {controller.get("cliente_id")}')
     
     logged_in = controller.get('logged_in')
+
+    # Aguardar até que o cliente_id seja False
+    while controller.get('cliente_id') is None:
+        print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
+        time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
+    # Aguardar até que o cliente_id seja False
+    while controller.get('logged_in') is None:
+        print(f'Aguardando logged_in ser False. Valor atual: {controller.get("logged_in")}')
+        time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
     
     if not logged_in:
         controller.set('logged_in', False)
         controller.set('cliente_id', False)
-        
-        # Aguardar até que o cliente_id seja False
-        while controller.get('cliente_id') is None:
-            print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
-            time.sleep(1)  # Aguardar 1 segundo antes de verificar novamente
-        
-        print(f'cliente_id agora é {controller.get('cliente_id')}. Saindo do loop.')
+
 
     print(f'Aqui eu deveria carregar todo o conteudo da pagina login')
     time.sleep(10)
