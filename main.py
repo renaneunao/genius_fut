@@ -338,6 +338,18 @@ def login(controller):
 def main_page(controller):
     print(f'Logged_In Main Page: {controller.get('logged_in')}')
     print(f'Cliente Main Page: {controller.get('cliente_id')}')
+    while controller.get('cliente_id') is None:
+        print(f'Aguardando cliente_id ser False. Valor atual: {controller.get("cliente_id")}')
+        time.sleep(10)  # Aguardar 1 segundo antes de verificar novamente
+        contador += 1
+        if st.button('Refaça o login, por favor'):
+            controller.set('cliente_id', False)
+            controller.set('logged_in', False)
+            login(controller)
+            st.rerun()
+        if contador == 10:
+            break
+        
     selected_country = None
     selected_league = None
     fixture_id = None
@@ -1348,14 +1360,15 @@ def main():
         # Verifica se a data de vencimento é menor que a data atual
         if data_vencimento is not None and data_vencimento < datetime.today():
             st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
-            time.sleep(3)
+            # time.sleep(3)
             # Trecho desabilitado por enquanto. Criar depois uma lógica de vendas integrada.
             # controller.set('logged_in', False)  # Redefine o estado de login
             # controller.set('cliente_id', False)
             # login(controller)
-            main_page(controller) # Trecho adicionado para passar pelo bug, remover depois.
-        else:
-            main_page(controller)
+            
+        # else:
+        #     main_page(controller)
+        main_page(controller) # Trecho adicionado para passar pelo bug, remover depois.
     elif logged_in is False:
         if st.session_state['screen'] == 'login':
             login(controller)
