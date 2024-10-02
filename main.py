@@ -271,8 +271,8 @@ def login(controller):
         controller.set('cliente_id', False)
 
 
-    print(f'Aqui eu deveria carregar todo o conteudo da pagina login')
-    time.sleep(10)
+    # print(f'Aqui eu deveria carregar todo o conteudo da pagina login')
+    # time.sleep(10)
 
     st.title("Login")
     usuario = st.text_input("Usuário", key='text_input_usuario_login')
