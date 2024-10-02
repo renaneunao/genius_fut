@@ -264,12 +264,12 @@ def login(controller):
         logged_in = controller.get('logged_in')
         # Pausa para evitar sobrecarga no processamento
         time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
-        st.write('Aguarde. Carregando inicialização')
+        # st.write('Aguarde. Carregando inicialização')
     while cliente_id is None:
         logged_in = controller.get('cliente_id')
         # Pausa para evitar sobrecarga no processamento
         time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
-        st.write('Aguarde. Carregando especificações do cliente')
+        # st.write('Aguarde. Carregando especificações do cliente')
     
 
     st.title("Login")
@@ -1321,12 +1321,12 @@ def main():
         logged_in = controller.get('logged_in')
         # Pausa para evitar sobrecarga no processamento
         time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
-        st.write('Aguarde. Carregando inicialização')
+        # st.write('Aguarde. Carregando inicialização')
     while cliente_id is None:
         logged_in = controller.get('cliente_id')
         # Pausa para evitar sobrecarga no processamento
         time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
-        st.write('Aguarde. Carregando especificações do cliente')
+        # st.write('Aguarde. Carregando especificações do cliente')
 
     # Obtem a data de vencimento do controlador de cookies
     data_vencimento = controller.get('data_limite')
