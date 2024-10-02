@@ -894,7 +894,6 @@ def main_page(controller):
             # Redirecionar para a página de login
             st.success("Você saiu da conta.")
             login(controller)
-            st.rerun()
 
         if nome_cliente == administrador:
             with st.sidebar.expander("Painel Administrador", expanded=True):
