@@ -1174,10 +1174,7 @@ def main_page(controller):
         print(f'Else do cliente_id: {controller.get('cliente_id')}')
         controller.set('logged_in', False)
         controller.set('cliente_id', False)
-        st.image('logo_atualizada.png', use_column_width=True)
-        st.write("Você não está logado. Refaça o login")
-        if st.button('Refaça o login'):
-            login(controller)
+        login(controller)
 
 
 def admin_page():
