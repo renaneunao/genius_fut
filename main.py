@@ -996,8 +996,8 @@ def main_page(controller):
             st.markdown(
                 """
                 <style>
-                /* Seletor CSS do botão fornecido */
-                #root > div:nth-child(1) > div.withScreencast > div > div > div > section.stAppViewMain.main.st-emotion-cache-bm2z3a.ea3mdgi8 > div.st-emotion-cache-1p2n2i4.ea3mdgi7 > div > div > div > div > div > div.st-emotion-cache-0.e1f1d6gn0 > div > div > div.st-emotion-cache-ocqkz7.e1f1d6gn5 > div.st-emotion-cache-1b2d4l5.e1f1d6gn3 > div > div > div > div > div > button {
+                /* Seletor CSS do botão com base na largura */
+                button[style="width: 86.2969px"] {
                     background-color: black;  /* Fundo preto */
                     border: 2px solid #33CC00;  /* Define a borda verde neon */
                     border-radius: 5px;  /* Arredonda as bordas, se desejado */
@@ -1006,9 +1006,9 @@ def main_page(controller):
                     color: #33CC00;  /* Define a cor do texto como verde neon */
                     transition: border-color 0.3s; /* Transição suave para a borda */
                 }
-
+            
                 /* Efeito ao passar o mouse */
-                #root > div:nth-child(1) > div.withScreencast > div > div > div > section.stAppViewMain.main.st-emotion-cache-bm2z3a.ea3mdgi8 > div.st-emotion-cache-1p2n2i4.ea3mdgi7 > div > div > div > div > div > div.st-emotion-cache-0.e1f1d6gn0 > div > div > div.st-emotion-cache-ocqkz7.e1f1d6gn5 > div.st-emotion-cache-1b2d4l5.e1f1d6gn3 > div > div > div > div > div > button:hover {
+                button[style="width: 86.2969px"]:hover {
                     border-color: #00FF00;  /* Muda a cor da borda ao passar o mouse */
                 }
                 </style>
