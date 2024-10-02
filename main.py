@@ -311,8 +311,8 @@ def login(controller):
             st.rerun()
 
 def main_page(controller):
-    print(f'Logged_In: {controller.get('logged_in')}')
-    print(f'Cliente: {controller.get('cliente_id')}')
+    print(f'Logged_In Main Page: {controller.get('logged_in')}')
+    print(f'Cliente Main Page: {controller.get('cliente_id')}')
     selected_country = None
     selected_league = None
     fixture_id = None
@@ -1141,6 +1141,7 @@ def main_page(controller):
 
     else:
         controller.set('logged_in', False)
+        controller.set('cliente_id', False)
         st.image('logo_atualizada.png', use_column_width=True)
         st.write("Você não está logado. Refaça o login")
         login(controller)
@@ -1279,11 +1280,10 @@ def admin_page():
         conn.close()
 
 def main():
-    print(f'Logged_In: {controller.get('logged_in')}')
-    print(f'Cliente: {controller.get('cliente_id')}')
+    print(f'Logged_In Main: {controller.get('logged_in')}')
+    print(f'Cliente Main: {controller.get('cliente_id')}')
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
-    print(logged_in)
     attempt_count = 0  # Contador de tentativas de login
 
     while logged_in is None:
@@ -1296,6 +1296,7 @@ def main():
         # Se o contador de tentativas bater 5, seta logged_in como False
         if attempt_count >= 5:
             controller.set('logged_in', False)
+            controller.set('cliente_id', False)
             logged_in = False  # Sai do loop
 
         # Pausa para evitar sobrecarga no processamento
