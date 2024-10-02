@@ -51,6 +51,8 @@ if 'screen' not in st.session_state:
     st.session_state['screen'] = 'login'  # Tela padrão é a de login
 
 def criar_tabelas():
+    print(f'Logged_In Criar Tabelas: {controller.get('logged_in')}')
+    print(f'Cliente Criar Tabelas: {controller.get('cliente_id')}')
     conn = mysql.connector.connect(
         host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
         user='renaneunao',
@@ -92,6 +94,8 @@ def criar_tabelas():
 
 
 def criar_nova_conta():
+    print(f'Logged_In Criar Nova Conta: {controller.get('logged_in')}')
+    print(f'Cliente Criar Nova Conta: {controller.get('cliente_id')}')
     st.title("Criar Nova Conta")
 
     # Inputs do usuário
@@ -128,6 +132,8 @@ def criar_nova_conta():
 
 
 def criar_conta(usuario, senha, nome, telefone, data_nascimento, pais):
+    print(f'Logged_In Criar Conta: {controller.get('logged_in')}')
+    print(f'Cliente Criar Conta: {controller.get('cliente_id')}')
     conn = mysql.connector.connect(
         host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
         user='renaneunao',
@@ -181,6 +187,8 @@ def criar_conta(usuario, senha, nome, telefone, data_nascimento, pais):
 
 
 def verificar_login(usuario, senha):
+    print(f'Logged_In Verificar Login: {controller.get('logged_in')}')
+    print(f'Cliente Verificar Login: {controller.get('cliente_id')}')
     conn = mysql.connector.connect(
         host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
         user='renaneunao',
@@ -198,6 +206,8 @@ def verificar_login(usuario, senha):
 
 
 def verificar_acesso(cliente_id):
+    print(f'Logged_In Verificar Acesso: {controller.get('logged_in')}')
+    print(f'Cliente Verificar Acesso: {controller.get('cliente_id')}')
     conn = mysql.connector.connect(
         host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
         user='renaneunao',
@@ -242,6 +252,8 @@ def add_rounded_corners(image_path, radius):
 
 
 def login(controller):
+    print(f'Logged_In Login: {controller.get('logged_in')}')
+    print(f'Cliente Login: {controller.get('cliente_id')}')
     logged_in = controller.get('logged_in')
     if not logged_in:
         controller.set('logged_in', False, 'ck_logged_in')
@@ -1140,6 +1152,8 @@ def main_page(controller):
             st.sidebar.image('logo_atualizada.png', use_column_width=True)
 
     else:
+        print(f'Else do cliente_id: {controller.get('logged_in')}')
+        print(f'Else do cliente_id: {controller.get('cliente_id')}')
         controller.set('logged_in', False)
         controller.set('cliente_id', False)
         st.image('logo_atualizada.png', use_column_width=True)
@@ -1149,6 +1163,8 @@ def main_page(controller):
 
 
 def admin_page():
+    print(f'Logged_In admin_page: {controller.get('logged_in')}')
+    print(f'Cliente admin_page: {controller.get('cliente_id')}')
     conn = mysql.connector.connect(
         host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
         user='renaneunao',
@@ -1336,4 +1352,6 @@ def main():
 
 
 if __name__ == "__main__":
+    print(f'Logged_In main=main: {controller.get('logged_in')}')
+    print(f'Cliente main=main: {controller.get('cliente_id')}')
     main()
