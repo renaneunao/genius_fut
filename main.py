@@ -22,7 +22,7 @@ dias_acesso = 3
 premium = False
 
 st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")
-# Remover o botão de Deploy e ajustar o espaço em branco
+
 st.markdown(
     r"""
     <style>
@@ -37,7 +37,18 @@ st.markdown(
         padding: 0; /* Remove padding ao redor do aplicativo */
     }
 
-    /* Ajuste outros elementos se necessário */
+    /* Bloquear o redimensionamento da sidebar */
+    [data-testid="stSidebar"] {
+        min-width: 250px; /* Definir a largura mínima da sidebar */
+        max-width: 250px; /* Definir a largura máxima da sidebar */
+        width: 250px;     /* Definir uma largura fixa */
+    }
+
+    /* Ajusta a altura do bottom container usando data-testid */
+    [data-testid="stBottomBlockContainer"] {
+        height: 105px; /* Ajuste este valor conforme necessário */
+        padding: 0;   /* Remove o padding se necessário */
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -894,140 +905,141 @@ def main_page(controller):
             """, unsafe_allow_html=True
         )
         with bottom():
-            my_grid = grid([2, 2, 2, 1], vertical_align="bottom")
-
-            with st.spinner("Carregando países..."):
-                countries = fetch_countries()
-
-            # Buscar países
-            if countries:
-                country_names = [country['name'] for country in countries]
-
-                # Selecionar o país armazenado, se disponível
-                selected_country = my_grid.selectbox("Selecione o país:", country_names, index=country_names.index(
-                    controller.get('selected_country')) if controller.get('selected_country') in country_names else 23)
-                controller.set('selected_country', selected_country)
-            else:
-                st.write("Nenhum país encontrado.")
-
-            # Buscar ligas para o país selecionado
-            if selected_country:
-                with st.spinner("Carregando ligas..."):
-                    leagues = fetch_leagues(selected_country)
-                if leagues:
-                    league_names = [league['league']['name'] for league in leagues]
-
-                    # Selecionar a liga armazenada, se disponível
-                    selected_league = my_grid.selectbox("Selecione a liga:", league_names,
-                                                        index=league_names.index(
-                                                            controller.get('selected_league')) if controller.get(
-                                                            'selected_league') in league_names else 0)
-                    controller.set('selected_league', selected_league)
-            else:
-                st.write("Nenhuma liga encontrada para o país selecionado.")
-
-            if selected_league:
-                league_id = next(
-                    (league['league']['id'] for league in leagues if
-                     league['league']['name'] == selected_league), None)
-                if league_id:
-                    with st.spinner("Carregando jogos..."):
-                        fixtures = fetch_fixtures(date, league_id, selected_timezone)
-                    if fixtures:
-                        games = [
-                            {
-                                'game_info': f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']} - {datetime.strptime(fixture['fixture']['date'], '%Y-%m-%dT%H:%M:%S%z').strftime('%H:%M')}",
-                                'fixture_id': fixture['fixture']['id']
-                            }
-                            for fixture in fixtures
-                        ]
-                        game_options = [game['game_info'] for game in games]
-                        selected_game_info = my_grid.selectbox("Escolha um jogo:", game_options)
-
-                        if selected_game_info:
-                            fixture_id = next(
-                                game['fixture_id'] for game in games if
-                                game['game_info'] == selected_game_info
-                            )
-                            # Imprimir o fixture_id selecionado
-                            print(f"Fixture ID selecionado: {fixture_id}")
-
-                            odds_data = fetch_odds(fixture_id)
-
-                            if odds_data:
-                                data = []
-
-                                for bookmaker in odds_data["response"][0]["bookmakers"]:
-                                    if bookmaker["name"] in selected_bookmakers:  # Filtrar pelas casas selecionadas
-                                        for bet in bookmaker["bets"]:
-                                            bet_name = bet["name"]  # Nome da bet
-                                            if bet_name in selected_bets:  # Verificar se a bet está no grupo selecionado
-                                                for value in bet["values"]:
-                                                    odd_value = float(value["odd"])
-                                                    if odd_value >= min_odd:  # Aplicar o filtro da odd mínima
-                                                        data.append({
-                                                            "Casa": bookmaker["name"],
-                                                            "Bet": bet_name,  # Adicionar o nome da bet
-                                                            "Valor": value["value"],
-                                                            "Odd": value["odd"]
-                                                        })
-
-                                # Criar DataFrame
-                                df_bets = pd.DataFrame(data)
-
-                                # Mostrar DataFrame no Streamlit
-                                if not df_bets.empty:
-                                    pass
-                                    # st.write(df_bets)
-                                else:
-                                    df_bets = 'Nenhuma bet. Desconsiderar.'
-                                    st.warning("Nenhuma odd encontrada para as casas e bets selecionadas.")
-
+            with st.expander("Clique para expandir a busca", expanded=True):
+                my_grid = grid([2, 2, 2, 1], vertical_align="bottom")
+    
+                with st.spinner("Carregando países..."):
+                    countries = fetch_countries()
+    
+                # Buscar países
+                if countries:
+                    country_names = [country['name'] for country in countries]
+    
+                    # Selecionar o país armazenado, se disponível
+                    selected_country = my_grid.selectbox("Selecione o país:", country_names, index=country_names.index(
+                        controller.get('selected_country')) if controller.get('selected_country') in country_names else 23)
+                    controller.set('selected_country', selected_country)
+                else:
+                    st.write("Nenhum país encontrado.")
+    
+                # Buscar ligas para o país selecionado
+                if selected_country:
+                    with st.spinner("Carregando ligas..."):
+                        leagues = fetch_leagues(selected_country)
+                    if leagues:
+                        league_names = [league['league']['name'] for league in leagues]
+    
+                        # Selecionar a liga armazenada, se disponível
+                        selected_league = my_grid.selectbox("Selecione a liga:", league_names,
+                                                            index=league_names.index(
+                                                                controller.get('selected_league')) if controller.get(
+                                                                'selected_league') in league_names else 0)
+                        controller.set('selected_league', selected_league)
+                else:
+                    st.write("Nenhuma liga encontrada para o país selecionado.")
+    
+                if selected_league:
+                    league_id = next(
+                        (league['league']['id'] for league in leagues if
+                         league['league']['name'] == selected_league), None)
+                    if league_id:
+                        with st.spinner("Carregando jogos..."):
+                            fixtures = fetch_fixtures(date, league_id, selected_timezone)
+                        if fixtures:
+                            games = [
+                                {
+                                    'game_info': f"{fixture['teams']['home']['name']} vs {fixture['teams']['away']['name']} - {datetime.strptime(fixture['fixture']['date'], '%Y-%m-%dT%H:%M:%S%z').strftime('%H:%M')}",
+                                    'fixture_id': fixture['fixture']['id']
+                                }
+                                for fixture in fixtures
+                            ]
+                            game_options = [game['game_info'] for game in games]
+                            selected_game_info = my_grid.selectbox("Escolha um jogo:", game_options)
+    
+                            if selected_game_info:
+                                fixture_id = next(
+                                    game['fixture_id'] for game in games if
+                                    game['game_info'] == selected_game_info
+                                )
+                                # Imprimir o fixture_id selecionado
+                                print(f"Fixture ID selecionado: {fixture_id}")
+    
+                                odds_data = fetch_odds(fixture_id)
+    
+                                if odds_data:
+                                    data = []
+    
+                                    for bookmaker in odds_data["response"][0]["bookmakers"]:
+                                        if bookmaker["name"] in selected_bookmakers:  # Filtrar pelas casas selecionadas
+                                            for bet in bookmaker["bets"]:
+                                                bet_name = bet["name"]  # Nome da bet
+                                                if bet_name in selected_bets:  # Verificar se a bet está no grupo selecionado
+                                                    for value in bet["values"]:
+                                                        odd_value = float(value["odd"])
+                                                        if odd_value >= min_odd:  # Aplicar o filtro da odd mínima
+                                                            data.append({
+                                                                "Casa": bookmaker["name"],
+                                                                "Bet": bet_name,  # Adicionar o nome da bet
+                                                                "Valor": value["value"],
+                                                                "Odd": value["odd"]
+                                                            })
+    
+                                    # Criar DataFrame
+                                    df_bets = pd.DataFrame(data)
+    
+                                    # Mostrar DataFrame no Streamlit
+                                    if not df_bets.empty:
+                                        pass
+                                        # st.write(df_bets)
+                                    else:
+                                        df_bets = 'Nenhuma bet. Desconsiderar.'
+                                        st.warning("Nenhuma odd encontrada para as casas e bets selecionadas.")
+    
+                        else:
+                            st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
+                            # pass
                     else:
-                        st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
                         # pass
+                        st.write("ID da liga não encontrado.")
                 else:
                     # pass
-                    st.write("ID da liga não encontrado.")
-            else:
-                # pass
-                st.write("Nenhuma liga encontrada para o país selecionado.")
-
-            st.markdown(
-                """
-                <style>
-                /* Seletor CSS do botão usando data-testid */
-                button[data-testid="stBaseButton-secondary"] {
-                    background-color: black;  /* Fundo preto */
-                    border: 2px solid #33CC00;  /* Define a borda verde neon */
-                    border-radius: 5px;  /* Arredonda as bordas, se desejado */
-                    cursor: pointer;  /* Define o cursor para pointer */
-                    padding: 10px;  /* Ajusta o padding para dar um espaço */
-                    color: #33CC00;  /* Define a cor do texto como verde neon */
-                    transition: border-color 0.3s; /* Transição suave para a borda */
-                }
-            
-                /* Efeito ao passar o mouse */
-                button[data-testid="stBaseButton-secondary"]:hover {
-                    border-color: #00FF00;  /* Muda a cor da borda ao passar o mouse */
-                }
-                </style>
-                """,
-                unsafe_allow_html=True
-            )
-
-            # Adiciona um botão para calcular as previsões
-            if selected_game_info is not None:
-                if my_grid.button("►"):
-                    (home_team_logo_url,
-                     away_team_logo_url,
-                     home_team_name,
-                     away_team_name,
-                     home_team_last_5_games,
-                     away_team_last_5_games,
-                     predictions,
-                     team_id_home,
-                     team_id_away) = get_prediction(fixture_id)
+                    st.write("Nenhuma liga encontrada para o país selecionado.")
+    
+                st.markdown(
+                    """
+                    <style>
+                    /* Seletor CSS do botão usando data-testid */
+                    button[data-testid="stBaseButton-secondary"] {
+                        background-color: black;  /* Fundo preto */
+                        border: 2px solid #33CC00;  /* Define a borda verde neon */
+                        border-radius: 5px;  /* Arredonda as bordas, se desejado */
+                        cursor: pointer;  /* Define o cursor para pointer */
+                        padding: 10px;  /* Ajusta o padding para dar um espaço */
+                        color: #33CC00;  /* Define a cor do texto como verde neon */
+                        transition: border-color 0.3s; /* Transição suave para a borda */
+                    }
+                
+                    /* Efeito ao passar o mouse */
+                    button[data-testid="stBaseButton-secondary"]:hover {
+                        border-color: #00FF00;  /* Muda a cor da borda ao passar o mouse */
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True
+                )
+    
+                # Adiciona um botão para calcular as previsões
+                if selected_game_info is not None:
+                    if my_grid.button("►"):
+                        (home_team_logo_url,
+                         away_team_logo_url,
+                         home_team_name,
+                         away_team_name,
+                         home_team_last_5_games,
+                         away_team_last_5_games,
+                         predictions,
+                         team_id_home,
+                         team_id_away) = get_prediction(fixture_id)
 
         if predictions is not None:
             # Display the logos and other details side by side
