@@ -49,6 +49,12 @@ st.markdown(
         height: 105px; /* Ajuste este valor conforme necessário */
         padding: 0;   /* Remove o padding se necessário */
     }
+
+    /* Usa HTML embutido no Markdown para mostrar o título e o ícone juntos
+    <h1 style="display: flex; align-items: center;">
+            GeniusFut
+            <img src="data:image/png;base64,{icon_base64}" style="height: 60px; margin-left: 10px;">
+    </h1>
     </style>
     """,
     unsafe_allow_html=True
@@ -371,18 +377,6 @@ def main_page(controller):
 
     # Converte a imagem em base64
     icon_base64 = get_base64_image("icone_mini.png")
-
-    # Usa HTML embutido no Markdown para mostrar o título e o ícone juntos
-    st.markdown(
-        f"""
-        <h1 style="display: flex; align-items: center;">
-            GeniusFut
-            <img src="data:image/png;base64,{icon_base64}" style="height: 60px; margin-left: 10px;">
-        </h1>
-        """,
-        unsafe_allow_html=True
-    )
-    
     
     cliente_id = controller.get('cliente_id')
     if cliente_id:
