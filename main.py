@@ -55,6 +55,30 @@ st.markdown(
             GeniusFut
             <img src="data:image/png;base64,{icon_base64}" style="height: 60px; margin-left: 10px;">
     </h1>
+
+    /* Adiciona os emojis na temperatura
+    .slider-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        margin-top: -20px;
+    }
+    .slider-container div {
+        font-size: 15px;
+    }
+    .slider-container .min-emoji {
+        margin-right: 10px;
+    }
+    .slider-container .max-emoji {
+        margin-left: 10px;
+    }
+    <div class="slider-container">
+        <div class="min-emoji">❄️</div>
+        <div class="max-emoji">🔥</div>
+    </div>
+
+    
     </style>
     """,
     unsafe_allow_html=True
