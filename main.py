@@ -723,31 +723,6 @@ def main_page(controller):
                 help="Quanto maior a temperatura, mais arriscada a bet."
             )
 
-            # Adiciona HTML e CSS para os emojis
-            st.markdown("""
-                <style>
-                .slider-container {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    position: relative;
-                    margin-top: -20px;
-                }
-                .slider-container div {
-                    font-size: 15px;
-                }
-                .slider-container .min-emoji {
-                    margin-right: 10px;
-                }
-                .slider-container .max-emoji {
-                    margin-left: 10px;
-                }
-                </style>
-                <div class="slider-container">
-                    <div class="min-emoji">❄️</div>
-                    <div class="max-emoji">🔥</div>
-                </div>
-                """, unsafe_allow_html=True)
             controller.set('bet_temperature', bet_temperature)
 
             ######################## CONFIGURAÇÃO PARA ADICIONAR ODD
