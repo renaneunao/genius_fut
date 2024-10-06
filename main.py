@@ -64,20 +64,9 @@ st.markdown(
         border-radius: 8px;  /* Cantos arredondados */
     }
     /* Estilo para o botão em verde neon */
-    #root > div:nth-child(1) > div.withScreencast > div > div > div > section.stAppViewMain.main.st-emotion-cache-bm2z3a.ea3mdgi8 > div.st-emotion-cache-1p2n2i4.ea3mdgi7 > div > div > div > div > div > div > details > div > div > div > div > div.st-emotion-cache-0.e1f1d6gn0 > div > div > div.st-emotion-cache-ocqkz7.e1f1d6gn5 > div.st-emotion-cache-1b2d4l5.e1f1d6gn3 > div > div > div > div > div > button {
-        background-color: #39FF14;  /* Fundo verde neon */
-        color: white;  /* Fonte branca */
-        border: none;  /* Sem bordas */
-        border-radius: 8px;  /* Cantos arredondados */
-        cursor: pointer;  /* Mão ao passar o mouse */
-        width: 100%;  /* Ocupa toda a largura da coluna */
+    .stButton {
+        padding-top: 20px;  /* Espaçamento superior de 20px */
     }
-    /* Efeito ao passar o mouse */
-    #root > div:nth-child(1) > div.withScreencast > div > div > div > section.stAppViewMain.main.st-emotion-cache-bm2z3a.ea3mdgi8 > div.st-emotion-cache-1p2n2i4.ea3mdgi7 > div > div > div > div > div > div > details > div > div > div > div > div.st-emotion-cache-0.e1f1d6gn0 > div > div > div.st-emotion-cache-ocqkz7.e1f1d6gn5 > div.st-emotion-cache-1b2d4l5.e1f1d6gn3 > div > div > div > div > div > button:hover {
-        background-color: black;  /* Fundo preto ao passar o mouse */
-        color: white;  /* Texto branco */
-    }
-
     """,
     unsafe_allow_html=True
 )
