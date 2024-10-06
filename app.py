@@ -190,10 +190,11 @@ def main_page(st, controller, premium, administrador, llm):
             label_casas,
             options=bookmakers_list,
             max_selections=max_selecoes,
-            default=bookmakers_list[2],
+            default=bookmakers_list[3],
             help=help_casas_aposta,
             disabled=not premium
         )
+        print(bookmakers_list)
 
         # Verificar se pelo menos uma opção foi selecionada em cada grupo
         erro = False
