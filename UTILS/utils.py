@@ -87,41 +87,42 @@ def get_prediction(fixture_id):
 
 
 def stats_to_dataframe(st, team_stats, team_name):
-    if team_stats:
-        data = {
-            "Tipo": ["Casa", "Fora", "Total"],
-            "Jogos": [
-                team_stats.get('home', {}).get('played', 0),
-                team_stats.get('away', {}).get('played', 0),
-                team_stats.get('all', {}).get('played', 0)
-            ],
-            "Vitórias": [
-                team_stats.get('home', {}).get('win', 0),
-                team_stats.get('away', {}).get('win', 0),
-                team_stats.get('all', {}).get('win', 0)
-            ],
-            "Gols Marcados": [
-                team_stats.get('home', {}).get('goals', {}).get('for', 0),
-                team_stats.get('away', {}).get('goals', {}).get('for', 0),
-                team_stats.get('all', {}).get('goals', {}).get('for', 0)
-            ],
-            "Gols Sofridos": [
-                team_stats.get('home', {}).get('goals', {}).get('against', 0),
-                team_stats.get('away', {}).get('goals', {}).get('against', 0),
-                team_stats.get('all', {}).get('goals', {}).get('against', 0)
-            ]
-        }
+    with st.spinner("Carregando estatísticas"):
+        if team_stats:
+            data = {
+                "Tipo": ["Casa", "Fora", "Total"],
+                "Jogos": [
+                    team_stats.get('home', {}).get('played', 0),
+                    team_stats.get('away', {}).get('played', 0),
+                    team_stats.get('all', {}).get('played', 0)
+                ],
+                "Vitórias": [
+                    team_stats.get('home', {}).get('win', 0),
+                    team_stats.get('away', {}).get('win', 0),
+                    team_stats.get('all', {}).get('win', 0)
+                ],
+                "Gols Marcados": [
+                    team_stats.get('home', {}).get('goals', {}).get('for', 0),
+                    team_stats.get('away', {}).get('goals', {}).get('for', 0),
+                    team_stats.get('all', {}).get('goals', {}).get('for', 0)
+                ],
+                "Gols Sofridos": [
+                    team_stats.get('home', {}).get('goals', {}).get('against', 0),
+                    team_stats.get('away', {}).get('goals', {}).get('against', 0),
+                    team_stats.get('all', {}).get('goals', {}).get('against', 0)
+                ]
+            }
 
-        df = pd.DataFrame(data)
+            df = pd.DataFrame(data)
 
-        # Calcular as médias
-        df["Média de Gols Marcados"] = df["Gols Marcados"] / df["Jogos"].replace(0, pd.NA)
-        df["Média de Gols Sofridos"] = df["Gols Sofridos"] / df["Jogos"].replace(0, pd.NA)
+            # Calcular as médias
+            df["Média de Gols Marcados"] = df["Gols Marcados"] / df["Jogos"].replace(0, pd.NA)
+            df["Média de Gols Sofridos"] = df["Gols Sofridos"] / df["Jogos"].replace(0, pd.NA)
 
-        # Centralizar os dados no DataFrame usando st.table
-        st.subheader(f"Estatísticas de {team_name}")
-        st.table(df.style.set_properties(**{'text-align': 'center'}))
+            # Centralizar os dados no DataFrame usando st.table
+            with st.expander(f"Estatísticas de {team_name}", expanded=False):
+                st.table(df.style.set_properties(**{'text-align': 'center'}))
 
-        return df
-    else:
-        st.write(f"Estatísticas para {team_name} não disponíveis.")
+            return df
+        else:
+            st.write(f"Estatísticas para {team_name} não disponíveis.")

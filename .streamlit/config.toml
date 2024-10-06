@@ -2,7 +2,7 @@
 
 [theme]
 base="dark"
-primaryColor="green"
+primaryColor="#39FF14"
 
 # Configurações de layout
 [server]

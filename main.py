@@ -13,10 +13,10 @@ from app import main_page
 load_dotenv()
 api_key_openai = os.getenv("OPENAI_API_KEY")
 
-administrador = 'Renan Barbosa Silva Vianna'
+administrador = 'Re Vianna'
 dias_acesso = 3
 premium = False
-llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai)
+llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai, temperature=0)
 
 st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")
 
@@ -40,11 +40,28 @@ st.markdown(
         max-width: 250px; /* Definir a largura máxima da sidebar */
         width: 250px;     /* Definir uma largura fixa */
     }
-
+    /* Aplica o tamanho da fonte a todos os <p> dentro da estrutura desejada */
+    div > label > div > div > div > p {
+        font-size: 12px; /* Ajusta o tamanho da fonte para 8px */
+        white-space: nowrap; /* Evita quebra de palavras */
+    }
+    /* Ajusta a altura do sidebar dentro do bottom container usando data-testid */
+    div > div > div > div > div > div > details > div {
+        height: 80px;  /* Ajuste o valor conforme necessário */
+        overflow: hidden;  /* Para evitar que conteúdo excedente apareça */
+    }
     /* Ajusta a altura do bottom container usando data-testid */
     [data-testid="stBottomBlockContainer"] {
-        height: 105px; /* Ajuste este valor conforme necessário */
+        height: 50px; /* Ajuste este valor conforme necessário */
         padding: 0;   /* Remove o padding se necessário */
+    }
+    /* Background verde para o expander do bottom */
+    div > div > div > div > div > div > details > summary {
+        background-color: #39FF14;  /* Fundo verde neon */
+        color: black;  /* Fonte branca */
+        font-weight: bold;  /* Para destacar ainda mais */
+        padding: 5px;  /* Para um pouco de espaçamento interno */
+        border-radius: 8px;  /* Cantos arredondados */
     }
     """,
     unsafe_allow_html=True

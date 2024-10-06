@@ -13,17 +13,17 @@ from UTILS.st_cache_functions import (fetch_timezones,
                                       fetch_team_stats,
                                       get_bookmakers,
                                       fetch_odds)
-from UTILS.listas_bets import bets_gols, bets_cartoes, bets_escanteios
+from UTILS.listas_bets import bets_obrigatorias, bets_gols, bets_cartoes, bets_escanteios, bet_marcadores, bets_finalizadores
 from UTILS.lista_languages import languages
 from UTILS.prompt_response import get_prompt
 
 from streamlit_extras.colored_header import colored_header
 from streamlit_extras.bottom_container import bottom
 from streamlit_extras.grid import grid
+from streamlit_vertical_slider import vertical_slider
 
 
 def main_page(st, controller, premium, administrador, llm):
-
     selected_country = None
     selected_league = None
     fixture_id = None
@@ -36,6 +36,10 @@ def main_page(st, controller, premium, administrador, llm):
 
     # Exibir a imagem na sidebar
     st.sidebar.image('logo_atualizada.png', use_column_width=True)
+    if premium:
+        st.sidebar.write("Usuário Premium! 😎")
+    else:
+        st.sidebar.write("Usuário Free 🐢")
 
     cliente_id = controller.get('cliente_id')
     if cliente_id:
@@ -89,118 +93,161 @@ def main_page(st, controller, premium, administrador, llm):
             st.sidebar.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
                                 unsafe_allow_html=True)
 
-        # Sidebar para configurações
-        with st.sidebar.expander("Configurações Gerais"):
-            st.title("Configurações Gerais")
+        col1, col2 = st.sidebar.columns(2)
 
-            # Obter o idioma selecionado do cookie ou usar o primeiro idioma da lista como padrão
-            selected_language_cookie = controller.get('language')
-            if selected_language_cookie in languages:
-                selected_language = selected_language_cookie
+        # Criar expander para opções 1, 2 e 3 na primeira coluna
+        with col1:
+            # Opções de seleção
+            if not premium:
+                opcao1 = st.checkbox("Vitória", value=True, disabled=True)
+                opcao2 = st.checkbox("Gols", disabled=True)
+                opcao3 = st.checkbox("Cartões", disabled=True)
             else:
-                selected_language = languages[5]  # Defina um valor padrão, por exemplo, o primeiro idioma da lista
+                opcao1 = st.checkbox("Vitória", value=True)
+                opcao2 = st.checkbox("Gols")
+                opcao3 = st.checkbox("Cartões")
 
-            # Seleção do idioma na sidebar
-            selected_language = st.selectbox("Selecione o idioma:", languages, index=languages.index(selected_language))
-            controller.set('language', selected_language)
-
-            # Campo de entrada para nome do usuário
-            user_name_cookie = controller.get('user_name')
-            user_name = st.text_input("Digite seu nome:", value=user_name_cookie)
-            controller.set('user_name', user_name)
-
-            bet_temperature_value = controller.get('bet_temperature')
-
-            if bet_temperature_value is not None:
-                bet_temperature = float(bet_temperature_value)
+            # Adicionando um slider vertical
+            if premium:
+                step_temperature = 0.1
             else:
-                # Handle the None case (e.g., set a default value or raise an error)
-                bet_temperature = 0.5  # or any other default value you want
+                step_temperature = 0
 
-            # Configura o slider
-            bet_temperature = st.slider(
-                "Defina a temperatura da aposta (0 a 1):",
-                min_value=0.0,
-                max_value=1.0,
-                value=bet_temperature,
-                step=0.1,
-                help="Quanto maior a temperatura, mais arriscada a bet."
+            bet_temperature = vertical_slider(
+                key="temperatura",
+                default_value=0,  # Representa 0.5 na escala de 0 a 100
+                height=100,
+                step=step_temperature,
+                min_value=0,
+                max_value=1,
+                track_color="green",
+                thumb_color="white",  # Bolinha
+                slider_color=('red', 'white'),
+                label="Temp",
             )
 
-            controller.set('bet_temperature', bet_temperature)
+            controller.set("bet_temperature", bet_temperature)
 
-            # Mapeamento de grupos de bets
-            bet_groups = {
-                "Bets de Gols": bets_gols,
-                "Bets de Escanteios": bets_escanteios,
-                "Bets de Cartões": bets_cartoes
-            }
+            if not premium:
+                st.sidebar.error("Edições apenas para premium.")
 
-            # Obtém o valor da odd mínima configurada
-            min_odd_value = controller.get('min_odd_value')
-
-            if min_odd_value is not None:
-                min_odd = float(min_odd_value)
+        # Criar expander para opções 4, 5 e 6 na segunda coluna
+        with col2:
+            # Opções de seleção
+            if not premium:
+                opcao4 = st.checkbox("Cantos", disabled=True)
+                opcao5 = st.checkbox("Marcador", disabled=True)
+                opcao6 = st.checkbox("Finalização", disabled=True)
             else:
-                # Tratar o caso de None (ex: definir um valor padrão ou levantar um erro)
-                min_odd = 1.1  # ou qualquer outro valor padrão que você desejar
+                opcao4 = st.checkbox("Cantos")
+                opcao5 = st.checkbox("Marcador")
+                opcao6 = st.checkbox("Finalização")
 
-            # Configura o slider para odd mínima
-            min_odd = st.slider(
-                "Defina a odd mínima (1.1 a 20):",
+            if premium:
+                step_min_odd = 0.1
+            else:
+                step_min_odd = 0
+
+            min_odd = vertical_slider(
+                key="odd_minima",
+                default_value=1.1,  # Representa 1.1 na escala de 1.1 a 15
+                height=100,
+                step=step_min_odd,
                 min_value=1.1,
-                max_value=20.0,
-                value=min_odd,
-                step=0.1,
-                help="Defina a odd mínima para suas apostas."
+                max_value=15,  # Representa até 15.0
+                track_color="green",
+                thumb_color="blue",  # Bolinha
+                slider_color=('blue', 'white'),
+                label="Odd Mín.",
             )
 
             # Armazena o valor da odd mínima no controller
             controller.set('min_odd_value', min_odd)
 
-            if premium:
-                default_bookmakers = ["Betfair", "Bet365", "Betano"]
-                help = 'Selecione até 3 casas de apostas'
-                max_selections = 3
-                default_group_bets = ['Bets de Gols', 'Bets de Escanteios', 'Bets de Cartões']
-            else:
-                default_bookmakers = ["Bet365"]
-                help = 'Selecione 1 casa de apostas'
-                max_selections = 1
-                default_group_bets = ['Bets de Gols']
+        # Mapeamento de grupos de bets
+        bet_groups = {
+            "Vitória": bets_obrigatorias,
+            "Gols": bets_gols,
+            "Cartões": bets_cartoes,
+            "Cantos": bets_escanteios,
+            "Marcador": bet_marcadores,
+            "Finalização": bets_finalizadores,
+        }
 
-            bookmakers_list = get_bookmakers('1180631')
-            selected_bookmakers = st.multiselect(
-                "Escolha até 3 casas de apostas:",
-                options=bookmakers_list,
-                default=[bm for bm in default_bookmakers if bm in bookmakers_list],  # Seleciona as casas padrão
-                max_selections=max_selections,
-                help=help
-            )
+        # Limitar seleção com base no status premium
+        bookmakers_list = get_bookmakers('1180631')
+        if premium:
+            max_selecoes = 3  # Até 3 opções para usuários premium
+            label_casas = f"Selecione até {max_selecoes} casa(s) de aposta:"
+            help_casas_aposta = "Você pode selecionar até 3 casas de aposta."
+        else:
+            max_selecoes = 1  # Apenas 1 opção para não premium
+            label_casas = f"Casa selecionada: {bookmakers_list[1]}"
+            help_casas_aposta = "Adquira premiun para selecionar mais de uma casa de aposta."
 
-            # Permitir ao usuário selecionar múltiplos grupos de bets
-            selected_groups = st.multiselect(
-                "Selecione um ou mais grupos de bets:",
-                options=list(bet_groups.keys()),
-                max_selections=1,
-                default=[bet for bet in default_group_bets if bet in list(bet_groups.keys())],
-            )
+        # Multiselect para escolher casas de apostas
+        selected_bookmakers = st.sidebar.multiselect(
+            label_casas,
+            options=bookmakers_list,
+            max_selections=max_selecoes,
+            default=bookmakers_list[1],
+            help=help_casas_aposta,
+            disabled=not premium
+        )
 
-            # Expandir os grupos selecionados para incluir todas as bets
-            selected_bets = []
-            for group in selected_groups:
+        # Verificar se pelo menos uma opção foi selecionada em cada grupo
+        erro = False
+        if not any([opcao1, opcao2, opcao3, opcao4, opcao5, opcao6]):
+            st.sidebar.warning("Você deve selecionar pelo menos uma opção de Tipo de Aposta.")
+            erro = True
+        if not selected_bookmakers:  # Esta condição verifica se a lista está vazia
+            st.sidebar.warning("Você deve selecionar pelo menos uma opção de Casa de Aposta.")
+            erro = True
+
+        selected_bets = []
+        if opcao1:
+            selected_bets.append("Vitória")
+        if opcao2:
+            selected_bets.append("Gols")
+        if opcao3:
+            selected_bets.append("Cartões")
+        if opcao4:
+            selected_bets.append("Cantos")
+        if opcao5:
+            selected_bets.append("Marcador")
+        if opcao6:
+            selected_bets.append("Finalização")
+
+        for group in selected_bets:
+            if group in bet_groups:
                 selected_bets.extend(bet_groups[group])
 
-            # Cria um expander para o timezone
-            with st.sidebar.expander(f"Horários de {default_timezone}", expanded=False):
-                # Dropdown para selecionar o timezone
-                selected_timezone = st.selectbox("Selecione o timezone:", timezones,
-                                                 index=timezones.index(default_timezone))
+        # Obter o idioma selecionado do cookie ou usar o primeiro idioma da lista como padrão
+        selected_language_cookie = controller.get('language')
+        if selected_language_cookie in languages:
+            selected_language = selected_language_cookie
+        else:
+            selected_language = languages[5]  # Defina um valor padrão, por exemplo, o primeiro idioma da lista
 
-                # Botão para mudar o timezone
-                if st.button("🔄", key="timezone_btn"):
-                    # A lógica para mudar o timezone pode ser adicionada aqui
-                    st.success(f"Timezone alterado para: {selected_timezone}")
+        # Seleção do idioma na sidebar
+        selected_language = st.sidebar.selectbox("Selecione o idioma:", languages, index=languages.index(selected_language))
+        controller.set('language', selected_language)
+
+        # Campo de entrada para nome do usuário
+        user_name_cookie = controller.get('user_name')
+        user_name = st.sidebar.text_input("Digite seu nome:", value=user_name_cookie)
+        controller.set('user_name', user_name)
+
+        # Cria um expander para o timezone
+        with st.sidebar.expander(default_timezone, expanded=False):
+            # Dropdown para selecionar o timezone
+            selected_timezone = st.selectbox("Selecione o timezone:", timezones,
+                                             index=timezones.index(default_timezone))
+
+            # Botão para mudar o timezone
+            if st.button("🔄", key="timezone_btn"):
+                # A lógica para mudar o timezone pode ser adicionada aqui
+                st.success(f"Timezone alterado para: {selected_timezone}")
 
         # Alinha o botão com o texto
         if st.sidebar.button("Sair da Conta", key="logout_btn"):
@@ -215,7 +262,6 @@ def main_page(st, controller, premium, administrador, llm):
         if user_name_cookie == administrador:
             with st.sidebar.expander("Painel Administrador", expanded=True):
                 admin_page(st, controller)
-
 
         with bottom():
             with st.expander("Clique para expandir a busca", expanded=True):
@@ -322,7 +368,7 @@ def main_page(st, controller, premium, administrador, llm):
 
                 # Adiciona um botão para calcular as previsões
                 if selected_game_info is not None:
-                    if my_grid.button("►"):
+                    if my_grid.button("►", disabled=erro):
                         (home_team_logo_url,
                          away_team_logo_url,
                          home_team_name,
@@ -377,13 +423,15 @@ def main_page(st, controller, premium, administrador, llm):
                                     stats_casa,
                                     stats_fora,
                                     bet_temperature,
-                                    df_bets)
+                                    df_bets,
+                                    llm
+                                    )
                 # Cria a chain para lidar com o LLM
-                chain = llm.invoke(prompt)
+                # chain = llm.invoke(prompt)
+                #
+                # response = chain.content
 
-                response = chain.content
-
-                st.write(response)
+                st.write(prompt)
         else:
             st.write("Escolha um jogo e deixe a IA calcular a previsão.")
             st.sidebar.image('logo_atualizada.png', use_column_width=True)
