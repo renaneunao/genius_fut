@@ -73,7 +73,7 @@ def main_page(st, controller, premium, administrador, llm):
         # Selecionar a data do jogo
         today = datetime.now(timezone).date()
         date = st.sidebar.date_input(
-            "Selecione a data do jogo desejado:",
+            "Selecione a data do jogo:",
             today,
             min_value=today,  # opcional: define a data mínima como hoje
             format="DD/MM/YYYY"
@@ -368,7 +368,7 @@ def main_page(st, controller, premium, administrador, llm):
 
                 # Adiciona um botão para calcular as previsões
                 if selected_game_info is not None:
-                    if my_grid.button("►", disabled=erro):
+                    if my_grid.button("►", disabled=erro, use_container_width=True):
                         (home_team_logo_url,
                          away_team_logo_url,
                          home_team_name,
