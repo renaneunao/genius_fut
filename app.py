@@ -190,7 +190,7 @@ def main_page(st, controller, premium, administrador, llm):
             label_casas,
             options=bookmakers_list,
             max_selections=max_selecoes,
-            default=bookmakers_list[1],
+            default=bookmakers_list[2],
             help=help_casas_aposta,
             disabled=not premium
         )
