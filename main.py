@@ -15,7 +15,7 @@ api_key_openai = os.getenv("OPENAI_API_KEY")
 
 administrador = 'Re Vianna'
 dias_acesso = 3
-premium = False
+premium = True
 llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai, temperature=0)
 
 st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")
