@@ -13,7 +13,7 @@ from app import main_page
 load_dotenv()
 api_key_openai = os.getenv("OPENAI_API_KEY")
 
-administrador = 'Re Vianna'
+administrador = 'Renan Barbosa Silva Vianna'
 dias_acesso = 3
 premium = True
 llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai, temperature=0)
