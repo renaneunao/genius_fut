@@ -14,7 +14,6 @@ api_key_openai = os.getenv("OPENAI_API_KEY")
 
 administrador = 'Renan Barbosa Silva Vianna'
 dias_acesso = 3
-premium = True
 llm = ChatOpenAI(model_name="gpt-4o-mini", openai_api_key=api_key_openai, temperature=0)
 
 st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")
@@ -89,7 +88,7 @@ def main():
     if logged_in is True:
         pass
 
-        main_page(st, controller, premium, administrador, llm)  # Trecho adicionado para passar pelo bug, remover depois.
+        main_page(st, controller, administrador, llm)  # Trecho adicionado para passar pelo bug, remover depois.
     elif logged_in is False:
         if st.session_state['screen'] == 'login':
             login(st, controller)

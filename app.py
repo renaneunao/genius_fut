@@ -23,7 +23,7 @@ from streamlit_extras.grid import grid
 from streamlit_vertical_slider import vertical_slider
 
 
-def main_page(st, controller, premium, administrador, llm):
+def main_page(st, controller, administrador, llm):
     selected_country = None
     selected_league = None
     fixture_id = None
@@ -36,10 +36,7 @@ def main_page(st, controller, premium, administrador, llm):
 
     # Exibir a imagem na sidebar
     st.sidebar.image('logo_atualizada.png', use_column_width=True)
-    if premium:
-        st.sidebar.write("Usuário Premium! 😎")
-    else:
-        st.sidebar.write("Usuário Free 🐢")
+    st.sidebar.write("Saldo: $01,25")
 
     cliente_id = controller.get('cliente_id')
     if cliente_id:
@@ -81,32 +78,19 @@ def main_page(st, controller, premium, administrador, llm):
 
         season = pd.to_datetime(date).year
 
-
         col1, col2 = st.sidebar.columns(2)
 
         # Criar expander para opções 1, 2 e 3 na primeira coluna
         with col1:
-            # Opções de seleção
-            if not premium:
-                opcao1 = st.checkbox("Vitória", value=True, disabled=True)
-                opcao2 = st.checkbox("Gols", disabled=True)
-                opcao3 = st.checkbox("Cartões", disabled=True)
-            else:
-                opcao1 = st.checkbox("Vitória", value=True)
-                opcao2 = st.checkbox("Gols")
-                opcao3 = st.checkbox("Cartões")
-
-            # Adicionando um slider vertical
-            if premium:
-                step_temperature = 0.1
-            else:
-                step_temperature = 0
+            opcao1 = st.checkbox("Vitória", value=True)
+            opcao2 = st.checkbox("Gols")
+            opcao3 = st.checkbox("Cartões")
 
             bet_temperature = vertical_slider(
                 key="temperatura",
                 default_value=0,  # Representa 0.5 na escala de 0 a 100
                 height=100,
-                step=step_temperature,
+                step=0.1,
                 min_value=0,
                 max_value=1,
                 track_color="green",
@@ -117,31 +101,17 @@ def main_page(st, controller, premium, administrador, llm):
 
             controller.set("bet_temperature", bet_temperature)
 
-            if not premium:
-                st.sidebar.error("Edições apenas para premium.")
-
         # Criar expander para opções 4, 5 e 6 na segunda coluna
         with col2:
-            # Opções de seleção
-            if not premium:
-                opcao4 = st.checkbox("Cantos", disabled=True)
-                opcao5 = st.checkbox("Marcador", disabled=True)
-                opcao6 = st.checkbox("Finalização", disabled=True)
-            else:
-                opcao4 = st.checkbox("Cantos")
-                opcao5 = st.checkbox("Marcador")
-                opcao6 = st.checkbox("Finalização")
-
-            if premium:
-                step_min_odd = 0.1
-            else:
-                step_min_odd = 0
+            opcao4 = st.checkbox("Cantos")
+            opcao5 = st.checkbox("Marcador")
+            opcao6 = st.checkbox("Finalização")
 
             min_odd = vertical_slider(
                 key="odd_minima",
                 default_value=1.1,  # Representa 1.1 na escala de 1.1 a 15
                 height=100,
-                step=step_min_odd,
+                step=0.1,
                 min_value=1.1,
                 max_value=15,  # Representa até 15.0
                 track_color="green",
@@ -163,16 +133,11 @@ def main_page(st, controller, premium, administrador, llm):
             "Finalização": bets_finalizadores,
         }
 
-        # Limitar seleção com base no status premium
+        # Limitar seleção com base no status
         bookmakers_list = get_bookmakers('1180631')
-        if premium:
-            max_selecoes = 3  # Até 3 opções para usuários premium
-            label_casas = f"Selecione até {max_selecoes} casa(s) de aposta:"
-            help_casas_aposta = "Você pode selecionar até 3 casas de aposta."
-        else:
-            max_selecoes = 1  # Apenas 1 opção para não premium
-            label_casas = f"Casa selecionada: {bookmakers_list[1]}"
-            help_casas_aposta = "Adquira premiun para selecionar mais de uma casa de aposta."
+        max_selecoes = 3  # Até 3 opções para usuários
+        label_casas = f"Selecione até {max_selecoes} casa(s) de aposta:"
+        help_casas_aposta = "Você pode selecionar até 3 casas de aposta."
 
         # Multiselect para escolher casas de apostas
         selected_bookmakers = st.sidebar.multiselect(
@@ -181,7 +146,7 @@ def main_page(st, controller, premium, administrador, llm):
             max_selections=max_selecoes,
             default=bookmakers_list[3],
             help=help_casas_aposta,
-            disabled=not premium
+            # disabled=not premium
         )
         print(bookmakers_list)
 
