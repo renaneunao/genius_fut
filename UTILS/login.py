@@ -1,19 +1,13 @@
 import mysql.connector
 import time
+from connection import get_connection
 
 
 def verificar_login(controller, usuario, senha):
     print(f'Logged_In Verificar Login: {controller.get("logged_in")}')
     print(f'Cliente Verificar Login: {controller.get("cliente_id")}')
 
-    # Conectar ao MySQL
-    conn = mysql.connector.connect(
-        host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
-        user='renaneunao',
-        password='*Vitorya333',
-        database='geniusfut_database',
-        port=3306
-    )
+    conn = get_connection()
 
     cursor = conn.cursor()
     cursor.execute('SELECT id FROM credenciais WHERE usuario = %s AND senha = %s', (usuario, senha))

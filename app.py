@@ -34,6 +34,26 @@ def main_page(st, controller, administrador, llm):
     away_team_logo_url = None
     selected_game_info = None
 
+    # Controle de precificação
+    preco_bet_vitorias = 0.01
+    preco_bet_gols = 0.01
+    preco_bet_cantos = 0.015
+    preco_bet_marcador = 0.01
+    preco_bet_cartoes = 0.1
+    preco_bet_finalizacao = 0.015
+
+    preco_llm_gemini_1_5_flash = 0.06
+    preco_llm_gemini_1_5_pro = 0.08
+    preco_llm_gemini_pro = 0.10
+    preco_llm_gpt_3_5_turbo = 0.06  # para entrada
+    preco_llm_gpt_4o_mini = 0.08
+    preco_llm_gpt_4o = 0.15
+
+    preco_temperatura = 0.005
+    preco_odd_min = 0.005
+
+    preco_inicial = 0
+
     # Exibir a imagem na sidebar
     st.sidebar.image('logo_atualizada.png', use_column_width=True)
 
@@ -79,6 +99,23 @@ def main_page(st, controller, administrador, llm):
 
         season = pd.to_datetime(date).year
 
+        # Criando uma lista de LLMs com seus respectivos preços
+        llms = {
+            "Gemini 1.5 Flash": preco_llm_gemini_1_5_flash,
+            "Gemini 1.5 Pro": preco_llm_gemini_1_5_pro,
+            "Gemini Pro": preco_llm_gemini_pro,
+            "GPT-3.5 Turbo": preco_llm_gpt_3_5_turbo,
+            "GPT-4o Mini": preco_llm_gpt_4o_mini,
+            "GPT-4o": preco_llm_gpt_4o,
+        }
+
+        selected_llm = st.sidebar.selectbox(
+            "Selecione o cérbro do 🤖:",
+            options=list(llms.keys())
+        )
+
+        preco_inicial += llms[selected_llm]
+
         col1, col2 = st.sidebar.columns(2)
 
         # Criar expander para opções 1, 2 e 3 na primeira coluna
@@ -101,6 +138,7 @@ def main_page(st, controller, administrador, llm):
             )
 
             controller.set("bet_temperature", bet_temperature)
+        preco_inicial += (bet_temperature * preco_temperatura)
 
         # Criar expander para opções 4, 5 e 6 na segunda coluna
         with col2:
@@ -120,6 +158,8 @@ def main_page(st, controller, administrador, llm):
                 slider_color=('blue', 'white'),
                 label="Odd Mín.",
             )
+
+            preco_inicial += (min_odd * preco_odd_min)
 
             # Armazena o valor da odd mínima no controller
             controller.set('min_odd_value', min_odd)
@@ -163,20 +203,28 @@ def main_page(st, controller, administrador, llm):
         selected_bets = []
         if opcao1:
             selected_bets.append("Vitória")
+            preco_inicial += preco_bet_vitorias
         if opcao2:
             selected_bets.append("Gols")
+            preco_inicial += preco_bet_gols
         if opcao3:
             selected_bets.append("Cartões")
+            preco_inicial += preco_bet_cartoes
         if opcao4:
             selected_bets.append("Cantos")
+            preco_inicial += preco_bet_cantos
         if opcao5:
             selected_bets.append("Marcador")
+            preco_inicial += preco_bet_marcador
         if opcao6:
             selected_bets.append("Finalização")
+            preco_inicial += preco_bet_finalizacao
 
         for group in selected_bets:
             if group in bet_groups:
                 selected_bets.extend(bet_groups[group])
+
+        st.sidebar.write(f'Preco da busca: {preco_inicial}')
 
         # Obter o idioma selecionado do cookie ou usar o primeiro idioma da lista como padrão
         selected_language_cookie = controller.get('language')
@@ -204,6 +252,7 @@ def main_page(st, controller, administrador, llm):
             if st.button("🔄", key="timezone_btn"):
                 # A lógica para mudar o timezone pode ser adicionada aqui
                 st.success(f"Timezone alterado para: {selected_timezone}")
+
 
         # Alinha o botão com o texto
         if st.sidebar.button("Sair da Conta", key="logout_btn"):
@@ -305,6 +354,7 @@ def main_page(st, controller, administrador, llm):
 
                                     # Mostrar DataFrame no Streamlit
                                     if not df_bets.empty:
+                                        registrar_consumo(conn, cliente_id, preco_inicial, 1)
                                         pass
                                         # st.write(df_bets)
                                     else:

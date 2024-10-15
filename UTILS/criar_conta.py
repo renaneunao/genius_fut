@@ -1,4 +1,5 @@
 import mysql.connector
+from connection import get_connection
 
 def criar_nova_conta(st, controller, dias_acesso):
     # Exibir informações do controller
@@ -46,13 +47,7 @@ def criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento,
     print(f'Cliente Criar Conta: {controller.get("cliente_id")}')
 
     # Conectar ao banco de dados
-    conn = mysql.connector.connect(
-        host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
-        user='renaneunao',
-        password='*Vitorya333',
-        database='geniusfut_database',
-        port=3306
-    )
+    conn = get_connection()
 
     cursor = conn.cursor()
     try:

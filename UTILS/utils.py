@@ -174,3 +174,29 @@ def calcular_saldo(cliente_id, conn):
 
     conn.close()  # Fecha a conexão
     return saldo if saldo > 0 else 0
+
+
+def get_llm(model_name, temperature):
+    from langchain_community.chat_models import ChatOllama
+    from langchain_openai import ChatOpenAI
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    import google.generativeai as genai
+    # Configure Generative AI with API key
+    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+    # from langchain.chains import LLMChain
+    from langchain_community.llms import NLPCloud
+
+
+    if model_name == "gemini-1.5-flash":
+        return ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=temperature)
+    elif model_name == "gemini-1.5-pro":
+        return ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=temperature)
+    elif model_name == "gemini-pro":
+        return ChatGoogleGenerativeAI(model="gemini-pro", temperature=temperature)
+    elif model_name == "gpt-3.5-turbo":
+        return ChatOpenAI(model="gpt-3.5-turbo", temperature=temperature)
+    elif model_name == "gpt-4o-mini":
+        return ChatOpenAI(model="gpt-4o-mini", temperature=temperature)
+    elif model_name == "gpt-4o":
+        return ChatOpenAI(model="gpt-4o", temperature=temperature)

@@ -1,13 +1,9 @@
 import mysql.connector
+from connection import get_connection
 
 def criar_tabelas():
-    conn = mysql.connector.connect(
-        host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
-        user='renaneunao',
-        password='*Vitorya333',
-        database='geniusfut_database',
-        port=3306
-    )
+    # Conectar ao banco de dados
+    conn = get_connection()
     cursor = conn.cursor()
 
     # Criar a nova database geniusfut_database

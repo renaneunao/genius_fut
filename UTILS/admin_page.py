@@ -1,17 +1,12 @@
 import mysql.connector
 import pandas as pd
+from connection import get_connection
 
 
 def admin_page(st, controller):
     print(f'Logged_In admin_page: {controller.get('logged_in')}')
     print(f'Cliente admin_page: {controller.get('cliente_id')}')
-    conn = mysql.connector.connect(
-        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
-        user='renaneunao',
-        password='*Vitorya111',
-        database='geniusfut_database',
-        port=3306
-    )
+    conn = get_connection()
 
     cursor = conn.cursor()
 
