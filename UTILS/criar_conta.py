@@ -43,9 +43,9 @@ def criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento,
     print(f'Logged_In Criar Conta: {controller.get('logged_in')}')
     print(f'Cliente Criar Conta: {controller.get('cliente_id')}')
     conn = mysql.connector.connect(
-        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+        host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
         user='renaneunao',
-        password='*Vitorya111',
+        password='*Vitorya333',
         database='geniusfut_database',
         port=3306
     )

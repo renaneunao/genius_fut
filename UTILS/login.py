@@ -5,10 +5,11 @@ import time
 def verificar_login(controller, usuario, senha):
     print(f'Logged_In Verificar Login: {controller.get('logged_in')}')
     print(f'Cliente Verificar Login: {controller.get('cliente_id')}')
+    # Conectar ao MySQL sem especificar o banco de dados
     conn = mysql.connector.connect(
-        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+        host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
         user='renaneunao',
-        password='*Vitorya111',
+        password='*Vitorya333',
         database='geniusfut_database',
         port=3306
     )

@@ -1,16 +1,17 @@
 import mysql.connector
 
-def criar_tabelas(controller):
-    print(f'Logged_In Criar Tabelas: {controller.get('logged_in')}')
-    print(f'Cliente Criar Tabelas: {controller.get('cliente_id')}')
+def criar_tabelas():
     conn = mysql.connector.connect(
-        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+        host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
         user='renaneunao',
-        password='*Vitorya111',
+        password='*Vitorya333',
         database='geniusfut_database',
         port=3306
     )
     cursor = conn.cursor()
+
+    # Criar a nova database geniusfut_database
+    cursor.execute("CREATE DATABASE IF NOT EXISTS geniusfut_database")
 
     # Create table for credentials
     cursor.execute('''CREATE TABLE IF NOT EXISTS credenciais (
@@ -26,18 +27,46 @@ def criar_tabelas(controller):
         nome VARCHAR(255),
         telefone VARCHAR(20) UNIQUE,
         data_nascimento DATE,
-        pais VARCHAR(255),
+        pais VARCHAR(255)
     )''')
 
-    # Create table for client access
-    cursor.execute('''CREATE TABLE IF NOT EXISTS acesso_cliente (
-        cliente_id INT,
-        data_limite DATE,
-        bypass INT,
-        FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE
-    )''')
+    # Criar tabela de acessos de clientes
+    cursor.execute('''
+            CREATE TABLE IF NOT EXISTS acesso_cliente (
+                cliente_id INT,
+                bypass INT,
+                trial_credits BOOLEAN DEFAULT FALSE,
+                FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE
+            )
+        ''')
+
+    # Criar tabela de consumos
+    cursor.execute('''
+            CREATE TABLE IF NOT EXISTS consumos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                cliente_id INT,
+                datahora DATETIME,
+                valor_consumo DECIMAL(10, 2),
+                configuracao_consumo VARCHAR(255),
+                FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE
+            )
+        ''')
+
+    # Criar tabela de compras de créditos
+    cursor.execute('''
+            CREATE TABLE IF NOT EXISTS compras_creditos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                cliente_id INT,
+                datahora DATETIME,
+                valor_compra DECIMAL(10, 2),
+                FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE
+            )
+        ''')
 
     # Commit the changes to the database
     conn.commit()
     cursor.close()
     conn.close()
+
+criar_tabelas()
+
