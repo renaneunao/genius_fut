@@ -1,9 +1,10 @@
 import mysql.connector
-from datetime import datetime, timedelta
 
 def criar_nova_conta(st, controller, dias_acesso):
-    print(f'Logged_In Criar Nova Conta: {controller.get('logged_in')}')
-    print(f'Cliente Criar Nova Conta: {controller.get('cliente_id')}')
+    # Exibir informações do controller
+    print(f'Logged_In Criar Nova Conta: {controller.get("logged_in")}')
+    print(f'Cliente Criar Nova Conta: {controller.get("cliente_id")}')
+
     st.title("Criar Nova Conta")
 
     # Inputs do usuário
@@ -40,8 +41,11 @@ def criar_nova_conta(st, controller, dias_acesso):
 
 
 def criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento, pais, dias_acesso):
-    print(f'Logged_In Criar Conta: {controller.get('logged_in')}')
-    print(f'Cliente Criar Conta: {controller.get('cliente_id')}')
+    # Exibir informações do controller
+    print(f'Logged_In Criar Conta: {controller.get("logged_in")}')
+    print(f'Cliente Criar Conta: {controller.get("cliente_id")}')
+
+    # Conectar ao banco de dados
     conn = mysql.connector.connect(
         host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
         user='renaneunao',
@@ -75,12 +79,9 @@ def criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento,
         # Obter o ID do cliente recém inserido
         cliente_id = cursor.lastrowid
 
-        # Calcular a data limite para o acesso do cliente
-        data_limite = datetime.today() + timedelta(days=dias_acesso)
-
         # Inserir registro de acesso do cliente
-        cursor.execute('INSERT INTO acesso_cliente (cliente_id, data_limite, bypass) VALUES (%s, %s, %s)',
-                       (cliente_id, data_limite, 0))
+        cursor.execute('INSERT INTO acesso_cliente (cliente_id, bypass, trial_credits) VALUES (%s, %s, %s)',
+                       (cliente_id, 0, False))
 
         conn.commit()
         st.success("Conta criada com sucesso!")
