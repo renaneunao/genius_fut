@@ -1,11 +1,12 @@
-from datetime import datetime
 import mysql.connector
 import time
 
+
 def verificar_login(controller, usuario, senha):
-    print(f'Logged_In Verificar Login: {controller.get('logged_in')}')
-    print(f'Cliente Verificar Login: {controller.get('cliente_id')}')
-    # Conectar ao MySQL sem especificar o banco de dados
+    print(f'Logged_In Verificar Login: {controller.get("logged_in")}')
+    print(f'Cliente Verificar Login: {controller.get("cliente_id")}')
+
+    # Conectar ao MySQL
     conn = mysql.connector.connect(
         host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
         user='renaneunao',
@@ -22,57 +23,25 @@ def verificar_login(controller, usuario, senha):
     return data  # Retorna apenas o id
 
 
-def verificar_acesso(controller, cliente_id):
-    print(f'Logged_In Verificar Acesso: {controller.get('logged_in')}')
-    print(f'Cliente Verificar Acesso: {controller.get('cliente_id')}')
-    # Conectar ao banco de dados
-    conn = mysql.connector.connect(
-        host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
-        user='renaneunao',
-        password='*Vitorya333',
-        database='geniusfut_database',
-        port=3306
-    )
-    cursor = conn.cursor()
-    cursor.execute('SELECT data_limite, bypass FROM acesso_cliente WHERE cliente_id = %s', (cliente_id,))
-    data = cursor.fetchone()
-    conn.close()
-
-    if data:
-        data_limite, bypass = data
-        hoje = datetime.now().date()
-
-        # Verifica se data_limite é uma string antes de tentar converter
-        if isinstance(data_limite, str):
-            data_limite = datetime.strptime(data_limite, "%Y-%m-%d").date()  # Converte string para date
-
-        # Agora você pode comparar diretamente
-        if bypass or data_limite >= hoje:
-            return True
-        else:
-            return False
-    return False
-
-
 def login(st, controller):
     controller.set('logged_in', False)  # Remover o estado de login
     controller.set('cliente_id', False)  # Opcional: limpar o cliente_id
-    print(f'Logged_In Main: {controller.get('logged_in')}')
-    print(f'Cliente Main: {controller.get('cliente_id')}')
+    print(f'Logged_In Main: {controller.get("logged_in")}')
+    print(f'Cliente Main: {controller.get("cliente_id")}')
+
     # Verifica se o usuário está logado
     logged_in = controller.get('logged_in')
-    cliente_id = controller.get('logged_in')
+    cliente_id = controller.get('cliente_id')
 
     while logged_in is None:
         logged_in = controller.get('logged_in')
         # Pausa para evitar sobrecarga no processamento
         time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
-        # st.write('Aguarde. Carregando inicialização')
+
     while cliente_id is None:
-        logged_in = controller.get('cliente_id')
+        cliente_id = controller.get('cliente_id')
         # Pausa para evitar sobrecarga no processamento
         time.sleep(1)  # Aguarda 1 segundo antes de verificar novamente
-        # st.write('Aguarde. Carregando especificações do cliente')
 
     st.title("Login")
     usuario = st.text_input("Usuário", key='text_input_usuario_login')
@@ -83,53 +52,11 @@ def login(st, controller):
         if st.button("Entrar"):
             credenciais = verificar_login(controller, usuario, senha)
             if credenciais:
-                # Conectar ao banco de dados
-                conn = mysql.connector.connect(
-                    host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
-                    user='renaneunao',
-                    password='*Vitorya333',
-                    database='geniusfut_database',
-                    port=3306
-                )
-
-                cursor_clientes = conn.cursor()
-                cursor_clientes.execute('SELECT id FROM clientes WHERE usuario = %s', (usuario,))
-                cliente = cursor_clientes.fetchone()
-
-                if cliente:
-                    cliente_id = cliente[0]
-                    cursor_acessos = conn.cursor()
-                    cursor_acessos.execute('SELECT data_limite, bypass FROM acesso_cliente WHERE cliente_id = %s',
-                                           (cliente_id,))
-                    acesso = cursor_acessos.fetchone()
-
-                    conn.close()  # Fechar a conexão após obter os dados
-
-                    if acesso:
-                        data_limite, bypass = acesso
-                        controller.set('data_limite',
-                                       data_limite.strftime('%Y-%m-%d'))  # Converter para string no formato ISO
-
-                        controller.set('bypass', bypass)
-
-                        # Verificar se a data limite é menor que hoje e o bypass é zero
-                        if data_limite < datetime.now().date() and bypass == 0:
-                            st.error("Acesso negado. É necessário comprar uma licença.")
-                        else:
-                            if verificar_acesso(controller, cliente_id):
-                                st.success("Login bem-sucedido! Bem-vindo à tela principal.")
-
-                                # Armazena os cookies
-                                controller.set('logged_in', True)
-                                controller.set('cliente_id', cliente_id)
-                                # main()
-                                st.rerun()
-                            else:
-                                st.error("Acesso negado. Verifique a data limite ou contate o suporte.")
-                    else:
-                        st.error("Nenhum acesso encontrado para este cliente.")
-                else:
-                    st.error("Cliente não encontrado.")
+                cliente_id = credenciais[0]
+                controller.set('logged_in', True)
+                controller.set('cliente_id', cliente_id)
+                st.success("Login bem-sucedido! Bem-vindo à tela principal.")
+                st.rerun()  # Recarrega a página após o login bem-sucedido
             else:
                 st.error("Usuário ou senha incorretos.")
 
