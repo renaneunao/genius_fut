@@ -25,10 +25,11 @@ def verificar_login(controller, usuario, senha):
 def verificar_acesso(controller, cliente_id):
     print(f'Logged_In Verificar Acesso: {controller.get('logged_in')}')
     print(f'Cliente Verificar Acesso: {controller.get('cliente_id')}')
+    # Conectar ao banco de dados
     conn = mysql.connector.connect(
-        host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+        host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
         user='renaneunao',
-        password='*Vitorya111',
+        password='*Vitorya333',
         database='geniusfut_database',
         port=3306
     )
@@ -82,10 +83,11 @@ def login(st, controller):
         if st.button("Entrar"):
             credenciais = verificar_login(controller, usuario, senha)
             if credenciais:
+                # Conectar ao banco de dados
                 conn = mysql.connector.connect(
-                    host='geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com',
+                    host='geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com',
                     user='renaneunao',
-                    password='*Vitorya111',
+                    password='*Vitorya333',
                     database='geniusfut_database',
                     port=3306
                 )
