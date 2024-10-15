@@ -47,16 +47,16 @@ def main_page(st, controller, administrador, llm):
         cursor.execute("SELECT SUM(valor_compra) FROM compras_creditos WHERE cliente_id = %s", (cliente_id,))
         valor_compras = cursor.fetchone()[0]  # Obtém o valor total de compras
         if valor_compras is not None:
-            saldo += valor_compras  # Adiciona ao saldo
+            saldo += float(valor_compras)  # Converte para float antes de somar
 
         # Subtrair os valores dos consumos
         cursor.execute("SELECT SUM(valor_consumo) FROM consumos WHERE cliente_id = %s", (cliente_id,))
         valor_consumos = cursor.fetchone()[0]  # Obtém o valor total de consumos
         if valor_consumos is not None:
-            saldo -= valor_consumos  # Subtrai do saldo
+            saldo -= float(valor_consumos)  # Converte para float antes de subtrair
 
         conn.close()  # Fecha a conexão
-        st.write(f'o Saldo para o cliente {cliente_id} é {saldo}')
+        st.write(f'O saldo para o cliente {cliente_id} é ${saldo:.2f}')
         return saldo if saldo > 0 else 0
 
     cliente_id = controller.get('cliente_id')
