@@ -35,6 +35,7 @@
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
     <filter-actions connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" dataset="geniusfut_database.credenciais" active-filter-id="EMPTY_FILTER" />
+    <filter-actions connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" dataset="geniusfut_database.compras_creditos" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" dataset="geniusfut_database.clientes" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" dataset="geniusfut_database.acesso_cliente" active-filter-id="EMPTY_FILTER" />
     <filter-actions connection-id="d79b6d33-789e-40fb-ade8-52d9594f50c2" dataset="sql10732869.clientes" active-filter-id="EMPTY_FILTER" />
@@ -152,14 +153,14 @@
           <driver-library value="" />
           <driver value="" />
           <url-type value="DATABASE" />
-          <host value="geniusfut.c7k02g0my0as.us-east-2.rds.amazonaws.com" />
+          <host value="geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com" />
           <port value="3306" />
           <database value="geniusfut_database" />
           <tns-folder value="" />
           <tns-profile value="" />
           <type value="USER_PASSWORD" />
           <user value="renaneunao" />
-          <deprecated-pwd value="KlZpdG9yeWExMTE=" />
+          <deprecated-pwd value="KlZpdG9yeWEzMzM=" />
         </database>
         <properties>
           <auto-commit value="false" />
