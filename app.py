@@ -81,17 +81,6 @@ def main_page(st, controller, premium, administrador, llm):
 
         season = pd.to_datetime(date).year
 
-        # Simulação de uma data de vencimento
-        data_vencimento = controller.get('data_limite')
-
-        try:
-            data_vencimento = datetime.strptime(data_vencimento, '%Y-%m-%d')
-            st.sidebar.markdown(
-                f"<span style='font-size: 12px;'>📅 Vencimento: {data_vencimento.strftime('%d/%m/%Y')}</span>",
-                unsafe_allow_html=True)
-        except ValueError:
-            st.sidebar.markdown("<span style='font-size: 12px;'>📅 Data de Vencimento: Não disponível.</span>",
-                                unsafe_allow_html=True)
 
         col1, col2 = st.sidebar.columns(2)
 
