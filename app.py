@@ -51,7 +51,7 @@ def main_page(st, controller, administrador, llm):
             nome_cliente = cliente[0]
             colored_header(
                 label=f"Bem-vindo, {nome_cliente}!",
-                description=f"Aqui o GREEN é certo!■■■■■■-■■■■■■Saldo: {saldo}",
+                description=f"Aqui o GREEN é certo!‎‎‎‎‎  -‎ ‎ ‎ ‎ ‎ Saldo: {saldo}",
                 color_name="green-70",
             )
         else:
