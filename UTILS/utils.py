@@ -4,6 +4,9 @@ import os
 from dotenv import load_dotenv
 import requests
 import pandas as pd
+from datetime import datetime
+import mysql.connector
+
 
 def add_rounded_corners(image_path, radius):
     img = Image.open(image_path).convert("RGBA")
@@ -126,3 +129,48 @@ def stats_to_dataframe(st, team_stats, team_name):
             return df
         else:
             st.write(f"Estatísticas para {team_name} não disponíveis.")
+
+
+def registrar_consumo(conn, cliente_id, valor_consumo, configuracao_consumo):
+    try:
+        cursor = conn.cursor()
+
+        # Data e hora atuais
+        datahora = datetime.now()
+
+        # Inserir um novo registro na tabela de consumos
+        cursor.execute(
+            "INSERT INTO consumos (cliente_id, datahora, valor_consumo, configuracao_consumo) VALUES (%s, %s, %s, %s)",
+            (cliente_id, datahora, valor_consumo, configuracao_consumo)
+        )
+
+        conn.commit()  # Confirma a transação
+        print("Consumo registrado com sucesso.")
+
+    except mysql.connector.Error as err:
+        print(f"Erro ao registrar consumo: {err}")
+
+    finally:
+        # Fechar cursor
+        cursor.close()
+
+
+def calcular_saldo(cliente_id, conn):
+    saldo = 0.0  # Inicializa o saldo
+
+    cursor = conn.cursor()
+
+    # Somar os valores das compras
+    cursor.execute("SELECT SUM(valor_compra) FROM compras_creditos WHERE cliente_id = %s", (cliente_id,))
+    valor_compras = cursor.fetchone()[0]  # Obtém o valor total de compras
+    if valor_compras is not None:
+        saldo += float(valor_compras)  # Converte para float antes de somar
+
+    # Subtrair os valores dos consumos
+    cursor.execute("SELECT SUM(valor_consumo) FROM consumos WHERE cliente_id = %s", (cliente_id,))
+    valor_consumos = cursor.fetchone()[0]  # Obtém o valor total de consumos
+    if valor_consumos is not None:
+        saldo -= float(valor_consumos)  # Converte para float antes de subtrair
+
+    conn.close()  # Fecha a conexão
+    return saldo if saldo > 0 else 0

@@ -3,7 +3,7 @@ import pytz
 import pandas as pd
 
 from UTILS.admin_page import admin_page
-from UTILS.utils import get_prediction, stats_to_dataframe
+from UTILS.utils import get_prediction, stats_to_dataframe, calcular_saldo, registrar_consumo
 from UTILS.login import login
 from UTILS.connection import get_connection
 from UTILS.st_cache_functions import (fetch_timezones,
@@ -37,28 +37,6 @@ def main_page(st, controller, administrador, llm):
     # Exibir a imagem na sidebar
     st.sidebar.image('logo_atualizada.png', use_column_width=True)
 
-    def calcular_saldo(cliente_id):
-        saldo = 0.0  # Inicializa o saldo
-
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        # Somar os valores das compras
-        cursor.execute("SELECT SUM(valor_compra) FROM compras_creditos WHERE cliente_id = %s", (cliente_id,))
-        valor_compras = cursor.fetchone()[0]  # Obtém o valor total de compras
-        if valor_compras is not None:
-            saldo += float(valor_compras)  # Converte para float antes de somar
-
-        # Subtrair os valores dos consumos
-        cursor.execute("SELECT SUM(valor_consumo) FROM consumos WHERE cliente_id = %s", (cliente_id,))
-        valor_consumos = cursor.fetchone()[0]  # Obtém o valor total de consumos
-        if valor_consumos is not None:
-            saldo -= float(valor_consumos)  # Converte para float antes de subtrair
-
-        conn.close()  # Fecha a conexão
-        st.write(f'O saldo para o cliente {cliente_id} é ${saldo:.2f}')
-        return saldo if saldo > 0 else 0
-
     cliente_id = controller.get('cliente_id')
     if cliente_id:
         conn = get_connection()
@@ -68,7 +46,7 @@ def main_page(st, controller, administrador, llm):
         cursor.execute("SELECT nome FROM clientes WHERE id = %s", (cliente_id,))
         cliente = cursor.fetchone()
 
-        saldo = calcular_saldo(cliente_id)  # Chama a função para calcular o saldo
+        saldo = calcular_saldo(cliente_id, conn)  # Chama a função para calcular o saldo
 
         if cliente:  # Verifica se o cliente não é None
             nome_cliente = cliente[0]
