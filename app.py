@@ -36,7 +36,7 @@ def main_page(st, controller, administrador, llm):
 
     # Exibir a imagem na sidebar
     st.sidebar.image('logo_atualizada.png', use_column_width=True)
-    st.sidebar.write("Saldo: $01,25")
+    saldo = '$01,25'
 
     cliente_id = controller.get('cliente_id')
     if cliente_id:
@@ -51,7 +51,7 @@ def main_page(st, controller, administrador, llm):
             nome_cliente = cliente[0]
             colored_header(
                 label=f"Bem-vindo, {nome_cliente}!",
-                description="Aqui o GREEN é certo!",
+                description=f"Aqui o GREEN é certo!          -          Saldo: {saldo}",
                 color_name="green-70",
             )
         else:
