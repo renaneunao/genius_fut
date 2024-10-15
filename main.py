@@ -1,6 +1,5 @@
 from streamlit_cookies_controller import CookieController
 import streamlit as st
-from datetime import datetime
 import time
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
@@ -87,25 +86,8 @@ def main():
     while (cliente_id := controller.get('cliente_id')) is None:
         time.sleep(0.1)
 
-    # Obtem a data de vencimento do controlador de cookies
-    data_vencimento = controller.get('data_limite')
-
-    if isinstance(data_vencimento, str):
-        try:
-            data_vencimento = datetime.strptime(data_vencimento, '%Y-%m-%d')  # Ajuste o formato conforme necessário
-        except ValueError:
-            st.error("Formato de data inválido.")
-            data_vencimento = None
-
     if logged_in is True:
-        # Verifica se a data de vencimento é menor que a data atual
-        if data_vencimento is not None and data_vencimento < datetime.today():
-            st.error("Sua licença venceu. Por favor, adquira uma nova licença.")
-            # time.sleep(3)
-            # Trecho desabilitado por enquanto. Criar depois uma lógica de vendas integrada.
-            # controller.set('logged_in', False)  # Redefine o estado de login
-            # controller.set('cliente_id', False)
-            # login(controller)
+        pass
 
         main_page(st, controller, premium, administrador, llm)  # Trecho adicionado para passar pelo bug, remover depois.
     elif logged_in is False:
