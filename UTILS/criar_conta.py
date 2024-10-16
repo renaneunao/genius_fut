@@ -1,5 +1,5 @@
 import mysql.connector
-from connection import get_connection
+from UTILS.connection import get_connection
 
 def criar_nova_conta(st, controller, dias_acesso):
     # Exibir informações do controller

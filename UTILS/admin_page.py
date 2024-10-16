@@ -1,6 +1,6 @@
 import mysql.connector
 import pandas as pd
-from connection import get_connection
+from UTILS.connection import get_connection
 
 
 def admin_page(st, controller):

@@ -1,6 +1,6 @@
 import mysql.connector
 import time
-from connection import get_connection
+from UTILS.connection import get_connection
 
 
 def verificar_login(controller, usuario, senha):
