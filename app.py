@@ -175,7 +175,7 @@ def main_page(st, controller, administrador, llm):
         }
 
         # Limitar seleção com base no status
-        bookmakers_list = get_bookmakers('1180631')
+        bookmakers_list = get_bookmakers()
         max_selecoes = 3  # Até 3 opções para usuários
         label_casas = f"Selecione até {max_selecoes} casa(s) de aposta:"
         help_casas_aposta = "Você pode selecionar até 3 casas de aposta."

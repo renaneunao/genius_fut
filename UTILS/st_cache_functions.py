@@ -13,7 +13,7 @@ api_key_rapidapi = os.getenv("X-RAPIDAPI-KEY")
 
 
 # Configurar a chave da API e a URL
-url = "https://api-football-v1.p.rapidapi.com/v3/odds"
+url = "https://api-football-v1.p.rapidapi.com/v2/odds"
 headers = {
     "x-rapidapi-key": api_key_rapidapi,
     "x-rapidapi-host": "api-football-v1.p.rapidapi.com"
@@ -96,15 +96,21 @@ def fetch_team_stats(season, team_id):
         return None
 
 @st.cache_data  # Cache para armazenar a lista de casas de apostas
-def get_bookmakers(fixture_id):
-    querystring = {"fixture": fixture_id}
-    response = requests.get(url, headers=headers, params=querystring)
+def get_bookmakers():
+    url = "https://api-football-v1.p.rapidapi.com/v3/odds/bookmakers"
+
+    headers = {
+        "x-rapidapi-key": api_key_rapidapi,
+        "x-rapidapi-host": "api-football-v1.p.rapidapi.com"
+    }
+
+    response = requests.get(url, headers=headers)
 
     if response.status_code == 200:
         odds_data = response.json()
-        return [bookmaker["name"] for bookmaker in odds_data["response"][0]["bookmakers"]]
+        return [bookmaker["name"] for bookmaker in odds_data["response"]]
     else:
-        st.error("Erro ao buscar odds. Verifique o ID do fixture.")
+        st.error("Erro ao buscar casas de apostas.")
         return []
 
 @st.cache_data  # Cache para armazenar odds
