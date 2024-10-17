@@ -6,6 +6,7 @@ import requests
 import pandas as pd
 from datetime import datetime
 import mysql.connector
+from UTILS.connection import get_connection
 
 
 def add_rounded_corners(image_path, radius):
@@ -28,7 +29,119 @@ def get_base64_image(image_path):
     return encoded_string
 
 
-def get_prediction(fixture_id):
+def stats_to_dataframe(st, team_stats, team_name):
+    with st.spinner("Carregando estatísticas"):
+        if team_stats:
+            data = {
+                "Tipo": ["Casa", "Fora", "Total"],
+                "Jogos": [
+                    team_stats.get('home', {}).get('played', 0),
+                    team_stats.get('away', {}).get('played', 0),
+                    team_stats.get('all', {}).get('played', 0)
+                ],
+                "Vitórias": [
+                    team_stats.get('home', {}).get('win', 0),
+                    team_stats.get('away', {}).get('win', 0),
+                    team_stats.get('all', {}).get('win', 0)
+                ],
+                "Gols Marcados": [
+                    team_stats.get('home', {}).get('goals', {}).get('for', 0),
+                    team_stats.get('away', {}).get('goals', {}).get('for', 0),
+                    team_stats.get('all', {}).get('goals', {}).get('for', 0)
+                ],
+                "Gols Sofridos": [
+                    team_stats.get('home', {}).get('goals', {}).get('against', 0),
+                    team_stats.get('away', {}).get('goals', {}).get('against', 0),
+                    team_stats.get('all', {}).get('goals', {}).get('against', 0)
+                ]
+            }
+
+            df = pd.DataFrame(data)
+
+            # Calcular as médias
+            df["Média de Gols Marcados"] = df["Gols Marcados"] / df["Jogos"].replace(0, pd.NA)
+            df["Média de Gols Sofridos"] = df["Gols Sofridos"] / df["Jogos"].replace(0, pd.NA)
+
+            # Centralizar os dados no DataFrame usando st.table
+            with st.expander(f"Estatísticas de {team_name}", expanded=False):
+                st.table(df.style.set_properties(**{'text-align': 'center'}))
+
+            return df
+        else:
+            st.write(f"Estatísticas para {team_name} não disponíveis.")
+
+
+def registrar_consumo(cliente_id, valor_consumo, configuracao_consumo):
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        # Data e hora atuais
+        datahora = datetime.now()
+
+        # Inserir um novo registro na tabela de consumos
+        cursor.execute(
+            "INSERT INTO consumos (cliente_id, datahora, valor_consumo, configuracao_consumo) VALUES (%s, %s, %s, %s)",
+            (cliente_id, datahora, valor_consumo, configuracao_consumo)
+        )
+
+        conn.commit()  # Confirma a transação
+        print("Consumo registrado com sucesso.")
+
+    except mysql.connector.Error as err:
+        print(f"Erro ao registrar consumo: {err}")
+
+    finally:
+        # Fechar cursor
+        cursor.close()
+
+
+def calcular_saldo(cliente_id, conn):
+    saldo = 0.0  # Inicializa o saldo
+
+    cursor = conn.cursor()
+
+    # Somar os valores das compras
+    cursor.execute("SELECT SUM(valor_compra) FROM compras_creditos WHERE cliente_id = %s", (cliente_id,))
+    valor_compras = cursor.fetchone()[0]  # Obtém o valor total de compras
+    if valor_compras is not None:
+        saldo += float(valor_compras)  # Converte para float antes de somar
+
+    # Subtrair os valores dos consumos
+    cursor.execute("SELECT SUM(valor_consumo) FROM consumos WHERE cliente_id = %s", (cliente_id,))
+    valor_consumos = cursor.fetchone()[0]  # Obtém o valor total de consumos
+    if valor_consumos is not None:
+        saldo -= float(valor_consumos)  # Converte para float antes de subtrair
+
+    conn.close()  # Fecha a conexão
+    return saldo if saldo > 0 else 0
+
+
+def get_llm(model_name, temperature):
+    from langchain_openai import ChatOpenAI
+    from langchain_google_genai import ChatGoogleGenerativeAI
+    import google.generativeai as genai
+
+    # Configure Generative AI with API key
+    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
+    if model_name == "gemini-1.5-flash" or model_name == "Gemini 1.5 Flash":
+        return ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=temperature)
+    elif model_name == "gemini-1.5-pro" or model_name == "Gemini 1.5 Pro":
+        return ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=temperature)
+    elif model_name == "gemini-pro" or model_name == "Gemini Pro":
+        return ChatGoogleGenerativeAI(model="gemini-pro", temperature=temperature)
+    elif model_name == "gpt-3.5-turbo" or model_name == "GPT-3.5 Turbo":
+        return ChatOpenAI(model="gpt-3.5-turbo", temperature=temperature)
+    elif model_name == "gpt-4o-mini" or model_name == "GPT-4o Mini":
+        return ChatOpenAI(model="gpt-4o-mini", temperature=temperature)
+    elif model_name == "gpt-4o" or model_name == "GPT-4o":
+        return ChatOpenAI(model="gpt-4o", temperature=temperature)
+
+
+def get_prediction(fixture_id, custo_consulta, cliente_id, configuracao_consumo):
+    # Registrar o consumo
+    registrar_consumo(cliente_id, custo_consulta, configuracao_consumo)
+
     # Carregar a chave da API do OpenAI do arquivo .env
     load_dotenv()
     api_key_rapidapi = os.getenv("X-RAPIDAPI-KEY")
@@ -87,116 +200,3 @@ def get_prediction(fixture_id):
     else:
         # Return default values if no data is available
         return 'N/A', 'N/A', 'No data available', 'No advice available', 'No data available', 'No data available', 'No advice available', None, None
-
-
-def stats_to_dataframe(st, team_stats, team_name):
-    with st.spinner("Carregando estatísticas"):
-        if team_stats:
-            data = {
-                "Tipo": ["Casa", "Fora", "Total"],
-                "Jogos": [
-                    team_stats.get('home', {}).get('played', 0),
-                    team_stats.get('away', {}).get('played', 0),
-                    team_stats.get('all', {}).get('played', 0)
-                ],
-                "Vitórias": [
-                    team_stats.get('home', {}).get('win', 0),
-                    team_stats.get('away', {}).get('win', 0),
-                    team_stats.get('all', {}).get('win', 0)
-                ],
-                "Gols Marcados": [
-                    team_stats.get('home', {}).get('goals', {}).get('for', 0),
-                    team_stats.get('away', {}).get('goals', {}).get('for', 0),
-                    team_stats.get('all', {}).get('goals', {}).get('for', 0)
-                ],
-                "Gols Sofridos": [
-                    team_stats.get('home', {}).get('goals', {}).get('against', 0),
-                    team_stats.get('away', {}).get('goals', {}).get('against', 0),
-                    team_stats.get('all', {}).get('goals', {}).get('against', 0)
-                ]
-            }
-
-            df = pd.DataFrame(data)
-
-            # Calcular as médias
-            df["Média de Gols Marcados"] = df["Gols Marcados"] / df["Jogos"].replace(0, pd.NA)
-            df["Média de Gols Sofridos"] = df["Gols Sofridos"] / df["Jogos"].replace(0, pd.NA)
-
-            # Centralizar os dados no DataFrame usando st.table
-            with st.expander(f"Estatísticas de {team_name}", expanded=False):
-                st.table(df.style.set_properties(**{'text-align': 'center'}))
-
-            return df
-        else:
-            st.write(f"Estatísticas para {team_name} não disponíveis.")
-
-
-def registrar_consumo(conn, cliente_id, valor_consumo, configuracao_consumo):
-    try:
-        cursor = conn.cursor()
-
-        # Data e hora atuais
-        datahora = datetime.now()
-
-        # Inserir um novo registro na tabela de consumos
-        cursor.execute(
-            "INSERT INTO consumos (cliente_id, datahora, valor_consumo, configuracao_consumo) VALUES (%s, %s, %s, %s)",
-            (cliente_id, datahora, valor_consumo, configuracao_consumo)
-        )
-
-        conn.commit()  # Confirma a transação
-        print("Consumo registrado com sucesso.")
-
-    except mysql.connector.Error as err:
-        print(f"Erro ao registrar consumo: {err}")
-
-    finally:
-        # Fechar cursor
-        cursor.close()
-
-
-def calcular_saldo(cliente_id, conn):
-    saldo = 0.0  # Inicializa o saldo
-
-    cursor = conn.cursor()
-
-    # Somar os valores das compras
-    cursor.execute("SELECT SUM(valor_compra) FROM compras_creditos WHERE cliente_id = %s", (cliente_id,))
-    valor_compras = cursor.fetchone()[0]  # Obtém o valor total de compras
-    if valor_compras is not None:
-        saldo += float(valor_compras)  # Converte para float antes de somar
-
-    # Subtrair os valores dos consumos
-    cursor.execute("SELECT SUM(valor_consumo) FROM consumos WHERE cliente_id = %s", (cliente_id,))
-    valor_consumos = cursor.fetchone()[0]  # Obtém o valor total de consumos
-    if valor_consumos is not None:
-        saldo -= float(valor_consumos)  # Converte para float antes de subtrair
-
-    conn.close()  # Fecha a conexão
-    return saldo if saldo > 0 else 0
-
-
-def get_llm(model_name, temperature):
-    from langchain_community.chat_models import ChatOllama
-    from langchain_openai import ChatOpenAI
-    from langchain_google_genai import ChatGoogleGenerativeAI
-    import google.generativeai as genai
-    # Configure Generative AI with API key
-    genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
-    # from langchain.chains import LLMChain
-    from langchain_community.llms import NLPCloud
-
-
-    if model_name == "gemini-1.5-flash":
-        return ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=temperature)
-    elif model_name == "gemini-1.5-pro":
-        return ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=temperature)
-    elif model_name == "gemini-pro":
-        return ChatGoogleGenerativeAI(model="gemini-pro", temperature=temperature)
-    elif model_name == "gpt-3.5-turbo":
-        return ChatOpenAI(model="gpt-3.5-turbo", temperature=temperature)
-    elif model_name == "gpt-4o-mini":
-        return ChatOpenAI(model="gpt-4o-mini", temperature=temperature)
-    elif model_name == "gpt-4o":
-        return ChatOpenAI(model="gpt-4o", temperature=temperature)

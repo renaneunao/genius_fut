@@ -3,7 +3,7 @@ import pytz
 import pandas as pd
 
 from UTILS.admin_page import admin_page
-from UTILS.utils import get_prediction, stats_to_dataframe, calcular_saldo, registrar_consumo
+from UTILS.utils import get_prediction, stats_to_dataframe, calcular_saldo, get_llm
 from UTILS.login import login
 from UTILS.connection import get_connection
 from UTILS.st_cache_functions import (fetch_timezones,
@@ -23,7 +23,7 @@ from streamlit_extras.grid import grid
 from streamlit_vertical_slider import vertical_slider
 
 
-def main_page(st, controller, administrador, llm):
+def main_page(st, controller, administrador):
     selected_country = None
     selected_league = None
     fixture_id = None
@@ -185,11 +185,10 @@ def main_page(st, controller, administrador, llm):
             label_casas,
             options=bookmakers_list,
             max_selections=max_selecoes,
-            default=bookmakers_list[3],
+            default=bookmakers_list[7],
             help=help_casas_aposta,
             # disabled=not premium
         )
-        print(bookmakers_list)
 
         # Verificar se pelo menos uma opção foi selecionada em cada grupo
         erro = False
@@ -201,30 +200,87 @@ def main_page(st, controller, administrador, llm):
             erro = True
 
         selected_bets = []
+        selected_bets_favoritas = []
         if opcao1:
             selected_bets.append("Vitória")
+            selected_bets_favoritas.append("Vitória")
             preco_inicial += preco_bet_vitorias
         if opcao2:
             selected_bets.append("Gols")
+            selected_bets_favoritas.append("Gols")
             preco_inicial += preco_bet_gols
         if opcao3:
             selected_bets.append("Cartões")
+            selected_bets_favoritas.append("Cartões")
             preco_inicial += preco_bet_cartoes
         if opcao4:
             selected_bets.append("Cantos")
+            selected_bets_favoritas.append("Cantos")
             preco_inicial += preco_bet_cantos
         if opcao5:
             selected_bets.append("Marcador")
+            selected_bets_favoritas.append("Marcador")
             preco_inicial += preco_bet_marcador
         if opcao6:
             selected_bets.append("Finalização")
+            selected_bets_favoritas.append("Finalização")
             preco_inicial += preco_bet_finalizacao
 
         for group in selected_bets:
             if group in bet_groups:
                 selected_bets.extend(bet_groups[group])
 
+        # Valores de precificação das casas de apostas
+        preco_casas_aposta = {
+            '10Bet': 0.03,
+            'Marathonbet': 0.03,
+            'Betfair': 0.05,
+            'Pinnacle': 0.03,
+            'SBO': 0.03,
+            'Bwin': 0.03,
+            'William Hill': 0.03,
+            'Bet365': 0.06,
+            'Dafabet': 0.03,
+            'Ladbrokes': 0.03,
+            '1xBet': 0.03,
+            'BetFred': 0.03,
+            '188Bet': 0.03,
+            'Interwetten': 0.03,
+            'Unibet': 0.03,
+            '5Dimes': 0.03,
+            'Intertops': 0.03,
+            'Bovada': 0.03,
+            'Betcris': 0.03,
+            '888Sport': 0.03,
+            'Tipico': 0.03,
+            'Sportingbet': 0.05,
+            'Betway': 0.03,
+            'Expekt': 0.03,
+            'Betsson': 0.03,
+            'NordicBet': 0.03,
+            'ComeOn': 0.03,
+            'Netbet': 0.03,
+            'Betano': 0.06,
+            'Fonbet': 0.03
+        }
+
+        # Inicializar o preço total das casas de apostas
+        preco_casas_selecionadas = 0
+
+        # Iterar sobre as casas de apostas selecionadas e somar o preço correspondente
+        for casa in selected_bookmakers:
+            if casa in preco_casas_aposta:
+                preco_casas_selecionadas += preco_casas_aposta[casa]
+
+        # Somar o preço das casas de apostas ao preço total inicial
+        preco_inicial += preco_casas_selecionadas
+
         st.sidebar.write(f'Preco da busca: {preco_inicial}')
+
+        # Campo de entrada para nome do usuário
+        user_name_cookie = controller.get('user_name')
+        user_name = st.sidebar.text_input("Digite seu nome:", value=user_name_cookie)
+        controller.set('user_name', user_name)
 
         # Obter o idioma selecionado do cookie ou usar o primeiro idioma da lista como padrão
         selected_language_cookie = controller.get('language')
@@ -234,25 +290,15 @@ def main_page(st, controller, administrador, llm):
             selected_language = languages[5]  # Defina um valor padrão, por exemplo, o primeiro idioma da lista
 
         # Seleção do idioma na sidebar
-        selected_language = st.sidebar.selectbox("Selecione o idioma:", languages, index=languages.index(selected_language))
-        controller.set('language', selected_language)
-
-        # Campo de entrada para nome do usuário
-        user_name_cookie = controller.get('user_name')
-        user_name = st.sidebar.text_input("Digite seu nome:", value=user_name_cookie)
-        controller.set('user_name', user_name)
+        with st.sidebar.expander(selected_language, expanded=False):
+            selected_language = st.selectbox("Selecione o idioma:", languages, index=languages.index(selected_language))
+            controller.set('language', selected_language)
 
         # Cria um expander para o timezone
         with st.sidebar.expander(default_timezone, expanded=False):
             # Dropdown para selecionar o timezone
             selected_timezone = st.selectbox("Selecione o timezone:", timezones,
                                              index=timezones.index(default_timezone))
-
-            # Botão para mudar o timezone
-            if st.button("🔄", key="timezone_btn"):
-                # A lógica para mudar o timezone pode ser adicionada aqui
-                st.success(f"Timezone alterado para: {selected_timezone}")
-
 
         # Alinha o botão com o texto
         if st.sidebar.button("Sair da Conta", key="logout_btn"):
@@ -348,44 +394,55 @@ def main_page(st, controller, administrador, llm):
                                                                 "Valor": value["value"],
                                                                 "Odd": value["odd"]
                                                             })
+                                        else:
+                                            st.warning("Nenhuma odd encontrada para as casas e bets selecionadas. "
+                                                       "Escolha outra opção de jogo ou de casa de apostas.")
 
                                     # Criar DataFrame
                                     df_bets = pd.DataFrame(data)
+                                    print(f'Finalizei a data, segue: {data}')
 
                                     # Mostrar DataFrame no Streamlit
                                     if not df_bets.empty:
-                                        registrar_consumo(conn, cliente_id, preco_inicial, 1)
+                                        print(f'Agora vamos mostrar o dataframe: {df_bets}')
                                         pass
-                                        # st.write(df_bets)
                                     else:
-                                        df_bets = 'Nenhuma bet. Desconsiderar.'
-                                        st.warning("Nenhuma odd encontrada para as casas e bets selecionadas.")
+                                        erro = True
+                                        df_bets = None
+                                        st.warning("Nenhuma odd encontrada para as casas e bets selecionadas. "
+                                                   "Escolha outra opção de jogo ou de casa de apostas.")
 
                         else:
+                            erro = True
                             st.write("Nenhum jogo encontrado para a data e liga selecionadas.")
                             # pass
                     else:
                         # pass
+                        erro = True
                         st.write("ID da liga não encontrado.")
                 else:
+                    erro = True
                     # pass
                     st.write("Nenhuma liga encontrada para o país selecionado.")
 
-
                 # Adiciona um botão para calcular as previsões
-                if selected_game_info is not None:
-                    if my_grid.button("►", disabled=erro, use_container_width=True):
-                        (home_team_logo_url,
-                         away_team_logo_url,
-                         home_team_name,
-                         away_team_name,
-                         home_team_last_5_games,
-                         away_team_last_5_games,
-                         predictions,
-                         team_id_home,
-                         team_id_away) = get_prediction(fixture_id)
+                if saldo >= preco_inicial:
+                    if selected_game_info is not None:
+                        if my_grid.button(f"${preco_inicial:.2f}  ►", disabled=erro, use_container_width=True):
+                            (home_team_logo_url,
+                             away_team_logo_url,
+                             home_team_name,
+                             away_team_name,
+                             home_team_last_5_games,
+                             away_team_last_5_games,
+                             predictions,
+                             team_id_home,
+                             team_id_away) = get_prediction(fixture_id, preco_inicial, cliente_id, 1)
+                else:
+                    if my_grid.button('Recarregar', disabled=erro, use_container_width=True):
+                        st.write("Recarga feita.")
 
-        if predictions is not None:
+        if predictions is not None and df_bets is not None:
             col1, col2 = st.columns(2)
 
             with col1:
@@ -418,6 +475,7 @@ def main_page(st, controller, administrador, llm):
             st.write("**Inteligência Artificial Calculando:**")
 
             with st.spinner("Calculando previsão..."):
+                llm = get_llm(selected_llm, 0)
                 prompt = get_prompt(st,
                                     selected_language,
                                     user_name,
@@ -430,14 +488,12 @@ def main_page(st, controller, administrador, llm):
                                     stats_fora,
                                     bet_temperature,
                                     df_bets,
-                                    llm
+                                    llm,
+                                    selected_bets_favoritas
                                     )
-                # Cria a chain para lidar com o LLM
-                # chain = llm.invoke(prompt)
-                #
-                # response = chain.content
-
                 st.write(prompt)
+
+            # st.write(df_bets)
         else:
             st.write("Escolha um jogo e deixe a IA calcular a previsão.")
             st.sidebar.image('logo_atualizada.png', use_column_width=True)

@@ -1,4 +1,3 @@
-import mysql.connector
 from UTILS.connection import get_connection
 
 def criar_nova_conta(st, controller, dias_acesso):
@@ -81,8 +80,7 @@ def criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento,
         conn.commit()
         st.success("Conta criada com sucesso!")
 
-    except mysql.connector.IntegrityError as e:
-        st.error(f"Erro de integridade ao criar conta: {str(e)}")
+
     except Exception as e:
         st.error(f"Erro inesperado: {str(e)}")
     finally:
