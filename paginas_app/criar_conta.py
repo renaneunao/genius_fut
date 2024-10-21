@@ -1,46 +1,13 @@
 from UTILS.connection import get_connection
+import streamlit as st
+from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
 
-def criar_nova_conta(st, controller, dias_acesso):
-    # Exibir informações do controller
-    print(f'Logged_In Criar Nova Conta: {controller.get("logged_in")}')
-    print(f'Cliente Criar Nova Conta: {controller.get("cliente_id")}')
+st.set_page_config(page_title="Criar Conta", page_icon="icone_mini.png")
 
-    st.title("Criar Nova Conta")
+controller = CookieController(key='cookies')
+RemoveEmptyElementContainer()
 
-    # Inputs do usuário
-    usuario = st.text_input("Usuário", key='text_input_criar_usuario')
-    senha = st.text_input("Senha", type='password', key='text_input_criar_senha')
-    confirmar_senha = st.text_input("Confirmar Senha", type='password', key='text_input_criar_confirmar_senha')
-    nome = st.text_input("Nome Completo", key='text_input_criar_nome_completo')
-    telefone = st.text_input("Telefone", key='text_input_criar_telefone')
-    data_nascimento = st.date_input("Data de Nascimento", format="DD/MM/YYYY", key='text_input_criar_data_nascimento')
-    pais = st.text_input("País", key='text_input_criar_pais')
-
-    col1, col2 = st.columns(2)
-    with col1:
-        # Validação ao clicar no botão "Criar Conta"
-        if st.button("Criar Conta"):
-            # Verificar se todos os campos estão preenchidos
-            if not usuario or not senha or not confirmar_senha or not nome or not telefone or not data_nascimento or not pais:
-                st.error("Todos os campos são obrigatórios!")
-                return
-
-            # Verificar se as senhas correspondem
-            if senha != confirmar_senha:
-                st.error("As senhas não correspondem!")
-                return
-
-            # Se as validações passarem, criar a conta
-            criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento, pais, dias_acesso)
-
-    with col2:
-        # Botão para voltar à tela de login
-        if st.button("Já tem uma conta? Faça login"):
-            st.session_state['screen'] = 'login'  # Muda a tela para login
-            st.rerun()
-
-
-def criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento, pais, dias_acesso):
+def criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento, pais):
     # Exibir informações do controller
     print(f'Logged_In Criar Conta: {controller.get("logged_in")}')
     print(f'Cliente Criar Conta: {controller.get("cliente_id")}')
@@ -86,3 +53,43 @@ def criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento,
     finally:
         cursor.close()
         conn.close()
+
+
+# Exibir informações do controller
+print(f'Logged_In Criar Nova Conta: {controller.get("logged_in")}')
+print(f'Cliente Criar Nova Conta: {controller.get("cliente_id")}')
+
+st.title("Criar Nova Conta")
+
+# Inputs do usuário
+usuario = st.text_input("Usuário", key='text_input_criar_usuario')
+senha = st.text_input("Senha", type='password', key='text_input_criar_senha')
+confirmar_senha = st.text_input("Confirmar Senha", type='password', key='text_input_criar_confirmar_senha')
+nome = st.text_input("Nome Completo", key='text_input_criar_nome_completo')
+telefone = st.text_input("Telefone", key='text_input_criar_telefone')
+data_nascimento = st.date_input("Data de Nascimento", format="DD/MM/YYYY", key='text_input_criar_data_nascimento')
+pais = st.text_input("País", key='text_input_criar_pais')
+
+col1, col2 = st.columns(2)
+with col1:
+    # Validação ao clicar no botão "Criar Conta"
+    if st.button("Criar Conta"):
+        # Verificar se todos os campos estão preenchidos
+        if not usuario or not senha or not confirmar_senha or not nome or not telefone or not data_nascimento or not pais:
+            st.error("Todos os campos são obrigatórios!")
+
+        # Verificar se as senhas correspondem
+        if senha != confirmar_senha:
+            st.error("As senhas não correspondem!")
+
+        # Se as validações passarem, criar a conta
+        criar_conta(st, controller, usuario, senha, nome, telefone, data_nascimento, pais)
+
+with col2:
+    # Botão para voltar à tela de login
+    if st.button("Já tem uma conta? Faça login"):
+        st.session_state['screen'] = 'login'  # Muda a tela para login
+        st.rerun()
+
+
+

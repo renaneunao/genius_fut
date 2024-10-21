@@ -42,6 +42,5 @@ with col1:
 with col2:
     # Botão para ir à tela de criar nova conta
     if st.button("Criar nova conta"):
-        st.session_state['screen'] = 'criar_conta'  # Muda a tela para criação de conta
-        st.rerun()
+        st.switch_page("paginas_app/criar_conta.py")  # Redireciona para a página de login
 
