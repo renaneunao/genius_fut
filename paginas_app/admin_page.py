@@ -1,20 +1,27 @@
-import mysql.connector
 import pandas as pd
 from UTILS.connection import get_connection
+import streamlit as st
+from paginas_app.main import administrador
+from UTILS.utils import verificar_cookies
+from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
 
+# Inicializa o controlador de cookies
+controller = CookieController(key='cookies')
+RemoveEmptyElementContainer()
 
-def admin_page(st, controller):
-    print(f'Logged_In admin_page: {controller.get('logged_in')}')
-    print(f'Cliente admin_page: {controller.get('cliente_id')}')
+# Configuração da página
+st.set_page_config(page_title="Painel do Administrador", page_icon="icone_mini.png")
+
+cliente_id, logged_in = verificar_cookies(controller)
+
+if cliente_id == administrador:
+
     conn = get_connection()
 
     cursor = conn.cursor()
 
-    # Título da página
-    st.title("Painel do Administrador")
-
     # Opções de menu
-    menu = st.sidebar.selectbox("Escolha uma opção:", ["Listar Clientes", "Listar Credenciais", "Listar Acessos"])
+    menu = st.selectbox("Escolha uma opção:", ["Listar Clientes", "Listar Credenciais", "Listar Acessos"])
 
     if menu == "Listar Clientes":
         st.subheader("Clientes")
@@ -129,3 +136,5 @@ def admin_page(st, controller):
         # Fechar o cursor e a conexão
         cursor.close()
         conn.close()
+else:
+    st.write("Você não é um administrador!")

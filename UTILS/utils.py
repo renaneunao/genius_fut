@@ -23,6 +23,7 @@ def add_rounded_corners(image_path, radius):
 
     return rounded_img
 
+
 def get_base64_image(image_path):
     with open(image_path, "rb") as img_file:
         encoded_string = base64.b64encode(img_file.read()).decode()
@@ -114,6 +115,14 @@ def calcular_saldo(cliente_id, conn):
 
     conn.close()  # Fecha a conexão
     return saldo if saldo > 0 else 0
+
+
+def verificar_cookies(controller):
+    # Tenta obter os valores da session state, e caso não existam, ele inicializa como False
+    cliente_id = controller.get("cliente_id")
+    logged_in = controller.get("logged_in")
+    # print(f'Retornando o client id e o logged in como {cliente_id, logged_in} na pagina: {pagina}')
+    return cliente_id, logged_in
 
 
 def get_llm(model_name, temperature):
