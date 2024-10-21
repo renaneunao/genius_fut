@@ -27,10 +27,11 @@ from streamlit_extras.bottom_container import bottom
 from streamlit_extras.grid import grid
 from streamlit_vertical_slider import vertical_slider
 
-from paginas_app.redirect import administrador
-
 # Configuração da página
 st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")
+
+administrador = 3
+
 
 # Inicializa o controlador de cookies
 controller = CookieController(key='cookies')

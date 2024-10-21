@@ -3,8 +3,6 @@ from streamlit_cookies_controller import CookieController, RemoveEmptyElementCon
 from dotenv import load_dotenv
 import os
 
-administrador = 3
-
 # Carrega as variáveis de ambiente
 load_dotenv()
 api_key_openai = os.getenv("OPENAI_API_KEY")

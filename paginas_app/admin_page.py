@@ -1,9 +1,10 @@
 import pandas as pd
 from UTILS.connection import get_connection
 import streamlit as st
-from paginas_app.redirect import administrador
 from UTILS.utils import verificar_cookies
 from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
+
+administrador = 3
 
 # Inicializa o controlador de cookies
 controller = CookieController(key='cookies')
