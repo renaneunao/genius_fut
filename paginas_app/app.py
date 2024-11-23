@@ -4,6 +4,8 @@ import pandas as pd
 import streamlit as st
 from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
 import time
+from dotenv import load_dotenv
+import os
 
 from UTILS.utils import (get_prediction,
                          stats_to_dataframe,
@@ -30,7 +32,11 @@ from streamlit_extras.bottom_container import bottom
 from streamlit_extras.grid import grid
 from streamlit_vertical_slider import vertical_slider
 
-from main import administrador
+# Carrega as variáveis do arquivo .env
+load_dotenv()
+
+# Acessa a variável de ambiente
+administrador = os.getenv("ADMINISTRADOR")
 
 # Configuração da página
 st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")

@@ -3,7 +3,14 @@ from UTILS.connection import get_connection
 import streamlit as st
 from UTILS.utils import verificar_cookies
 from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
-from main import administrador
+from dotenv import load_dotenv
+import os
+
+# Carrega as variáveis do arquivo .env
+load_dotenv()
+
+# Acessa a variável de ambiente
+administrador = os.getenv("ADMINISTRADOR")
 
 # Configuração da página
 st.set_page_config(page_title="Painel do Administrador", page_icon="icone_mini.png")
