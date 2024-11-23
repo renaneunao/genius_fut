@@ -9,7 +9,6 @@ criar_conta = st.Page("paginas_app/criar_conta.py", title="Criar Conta")
 comprar_creditos_page = st.Page("paginas_app/comprar_creditos.py", title="Comprar Créditos")
 atualizar_creditos_page = st.Page("paginas_app/atualizar_creditos.py", title="Comprar Créditos")
 
-
 # Navegação
 pg = st.navigation([home, login, app, admin_page, criar_conta, comprar_creditos_page, atualizar_creditos_page], position="hidden")
 pg.run()

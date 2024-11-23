@@ -16,13 +16,7 @@
     <loaded-nodes />
   </component>
   <component name="DBNavigator.Project.DatabaseConsoleManager">
-    <connection id="d79b6d33-789e-40fb-ade8-52d9594f50c2">
-      <console name="Connection" type="STANDARD" schema="" session="Main" />
-    </connection>
-    <connection id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c">
-      <console name="AWS DB" type="STANDARD" schema="" session="Main" />
-    </connection>
-    <connection id="9a998b6a-7e73-4d4b-b549-75d81570b729">
+    <connection id="df8b267a-991f-4b3d-9366-09d1a2b0b890">
       <console name="UOL" type="STANDARD" schema="" session="Main" />
     </connection>
   </component>
@@ -33,22 +27,21 @@
     <open-files />
   </component>
   <component name="DBNavigator.Project.DatabaseSessionManager">
-    <connection id="d79b6d33-789e-40fb-ade8-52d9594f50c2" />
-    <connection id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" />
-    <connection id="9a998b6a-7e73-4d4b-b549-75d81570b729" />
+    <connection id="df8b267a-991f-4b3d-9366-09d1a2b0b890" />
   </component>
   <component name="DBNavigator.Project.DatasetFilterManager">
-    <filter-actions connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" dataset="geniusfut_database.credenciais" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" dataset="geniusfut_database.compras_creditos" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" dataset="geniusfut_database.clientes" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" dataset="geniusfut_database.acesso_cliente" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" dataset="geniusfut_database.consumos" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="d79b6d33-789e-40fb-ade8-52d9594f50c2" dataset="sql10732869.clientes" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="d79b6d33-789e-40fb-ade8-52d9594f50c2" dataset="sql10732869.credenciais" active-filter-id="EMPTY_FILTER" />
-    <filter-actions connection-id="d79b6d33-789e-40fb-ade8-52d9594f50c2" dataset="sql10732869.acesso_cliente" active-filter-id="EMPTY_FILTER" />
+    <filter-actions connection-id="df8b267a-991f-4b3d-9366-09d1a2b0b890" dataset="geniusfut.clientes" active-filter-id="EMPTY_FILTER" />
   </component>
   <component name="DBNavigator.Project.ExecutionManager">
     <retain-sticky-names value="false" />
+  </component>
+  <component name="DBNavigator.Project.MethodExecutionManager">
+    <method-browser />
+    <execution-history>
+      <group-entries value="true" />
+      <execution-inputs />
+    </execution-history>
+    <argument-values-cache />
   </component>
   <component name="DBNavigator.Project.ObjectQuickFilterManager">
     <last-used-operator value="EQUAL" />
@@ -56,208 +49,20 @@
   </component>
   <component name="DBNavigator.Project.Settings">
     <connections>
-      <connection id="d79b6d33-789e-40fb-ade8-52d9594f50c2" active="true" signed="true">
-        <database>
-          <name value="Connection" />
-          <description value="FREESQL" />
-          <database-type value="MYSQL" />
-          <config-type value="BASIC" />
-          <database-version value="5.5" />
-          <driver-source value="BUNDLED" />
-          <driver-library value="" />
-          <driver value="" />
-          <url-type value="DATABASE" />
-          <host value="sql10.freesqldatabase.com" />
-          <port value="3306" />
-          <database value="sql10732869" />
-          <tns-folder value="" />
-          <tns-profile value="" />
-          <type value="USER_PASSWORD" />
-          <user value="sql10732869" />
-          <deprecated-pwd value="cktDRjJFOWdJdw==" />
-        </database>
-        <properties>
-          <auto-commit value="false" />
-        </properties>
-        <ssh-settings>
-          <active value="false" />
-          <proxy-host value="" />
-          <proxy-port value="22" />
-          <proxy-user value="" />
-          <deprecated-proxy-pwd value="" />
-          <auth-type value="PASSWORD" />
-          <key-file value="" />
-          <key-passphrase value="" />
-        </ssh-settings>
-        <ssl-settings>
-          <active value="false" />
-          <certificate-authority-file value="" />
-          <client-certificate-file value="" />
-          <client-key-file value="" />
-        </ssl-settings>
-        <details>
-          <charset value="UTF-8" />
-          <session-management value="true" />
-          <ddl-file-binding value="true" />
-          <database-logging value="true" />
-          <connect-automatically value="true" />
-          <restore-workspace value="true" />
-          <restore-workspace-deep value="false" />
-          <environment-type value="default" />
-          <connectivity-timeout value="30" />
-          <idle-time-to-disconnect value="30" />
-          <idle-time-to-disconnect-pool value="5" />
-          <credential-expiry-time value="10" />
-          <max-connection-pool-size value="7" />
-          <alternative-statement-delimiter value="" />
-        </details>
-        <debugger>
-          <compile-dependencies value="true" />
-          <tcp-driver-tunneling value="false" />
-          <tcp-host-address value="" />
-          <tcp-port-from value="4000" />
-          <tcp-port-to value="4999" />
-          <debugger-type value="JDBC" />
-        </debugger>
-        <object-filters hide-empty-schemas="false" hide-pseudo-columns="false" hide-audit-columns="false">
-          <object-filters />
-          <object-type-filter use-master-settings="true">
-            <object-type name="SCHEMA" enabled="true" />
-            <object-type name="USER" enabled="true" />
-            <object-type name="ROLE" enabled="true" />
-            <object-type name="PRIVILEGE" enabled="true" />
-            <object-type name="CHARSET" enabled="true" />
-            <object-type name="TABLE" enabled="true" />
-            <object-type name="VIEW" enabled="true" />
-            <object-type name="MATERIALIZED_VIEW" enabled="true" />
-            <object-type name="NESTED_TABLE" enabled="true" />
-            <object-type name="COLUMN" enabled="true" />
-            <object-type name="INDEX" enabled="true" />
-            <object-type name="CONSTRAINT" enabled="true" />
-            <object-type name="DATASET_TRIGGER" enabled="true" />
-            <object-type name="DATABASE_TRIGGER" enabled="true" />
-            <object-type name="SYNONYM" enabled="true" />
-            <object-type name="SEQUENCE" enabled="true" />
-            <object-type name="PROCEDURE" enabled="true" />
-            <object-type name="FUNCTION" enabled="true" />
-            <object-type name="PACKAGE" enabled="true" />
-            <object-type name="TYPE" enabled="true" />
-            <object-type name="TYPE_ATTRIBUTE" enabled="true" />
-            <object-type name="ARGUMENT" enabled="true" />
-            <object-type name="DIMENSION" enabled="true" />
-            <object-type name="CLUSTER" enabled="true" />
-            <object-type name="DBLINK" enabled="true" />
-          </object-type-filter>
-        </object-filters>
-      </connection>
-      <connection id="4c1266e9-e54d-4bf4-ba60-982b3c8aa59c" active="true" signed="true">
-        <database>
-          <name value="AWS DB" />
-          <description value="geniusfut_database" />
-          <database-type value="MYSQL" />
-          <config-type value="BASIC" />
-          <database-version value="8.0" />
-          <driver-source value="BUNDLED" />
-          <driver-library value="" />
-          <driver value="" />
-          <url-type value="DATABASE" />
-          <host value="geniusfut-2.c5y0u2k8gygo.us-east-1.rds.amazonaws.com" />
-          <port value="3306" />
-          <database value="geniusfut_database" />
-          <tns-folder value="" />
-          <tns-profile value="" />
-          <type value="USER_PASSWORD" />
-          <user value="renaneunao" />
-          <deprecated-pwd value="KlZpdG9yeWEzMzM=" />
-        </database>
-        <properties>
-          <auto-commit value="false" />
-        </properties>
-        <ssh-settings>
-          <active value="false" />
-          <proxy-host value="" />
-          <proxy-port value="22" />
-          <proxy-user value="" />
-          <deprecated-proxy-pwd value="" />
-          <auth-type value="PASSWORD" />
-          <key-file value="" />
-          <key-passphrase value="" />
-        </ssh-settings>
-        <ssl-settings>
-          <active value="false" />
-          <certificate-authority-file value="" />
-          <client-certificate-file value="" />
-          <client-key-file value="" />
-        </ssl-settings>
-        <details>
-          <charset value="UTF-8" />
-          <session-management value="true" />
-          <ddl-file-binding value="true" />
-          <database-logging value="true" />
-          <connect-automatically value="true" />
-          <restore-workspace value="true" />
-          <restore-workspace-deep value="false" />
-          <environment-type value="default" />
-          <connectivity-timeout value="30" />
-          <idle-time-to-disconnect value="30" />
-          <idle-time-to-disconnect-pool value="5" />
-          <credential-expiry-time value="10" />
-          <max-connection-pool-size value="7" />
-          <alternative-statement-delimiter value="" />
-        </details>
-        <debugger>
-          <compile-dependencies value="true" />
-          <tcp-driver-tunneling value="false" />
-          <tcp-host-address value="" />
-          <tcp-port-from value="4000" />
-          <tcp-port-to value="4999" />
-          <debugger-type value="JDBC" />
-        </debugger>
-        <object-filters hide-empty-schemas="false" hide-pseudo-columns="false" hide-audit-columns="false">
-          <object-filters />
-          <object-type-filter use-master-settings="true">
-            <object-type name="SCHEMA" enabled="true" />
-            <object-type name="USER" enabled="true" />
-            <object-type name="ROLE" enabled="true" />
-            <object-type name="PRIVILEGE" enabled="true" />
-            <object-type name="CHARSET" enabled="true" />
-            <object-type name="TABLE" enabled="true" />
-            <object-type name="VIEW" enabled="true" />
-            <object-type name="MATERIALIZED_VIEW" enabled="true" />
-            <object-type name="NESTED_TABLE" enabled="true" />
-            <object-type name="COLUMN" enabled="true" />
-            <object-type name="INDEX" enabled="true" />
-            <object-type name="CONSTRAINT" enabled="true" />
-            <object-type name="DATASET_TRIGGER" enabled="true" />
-            <object-type name="DATABASE_TRIGGER" enabled="true" />
-            <object-type name="SYNONYM" enabled="true" />
-            <object-type name="SEQUENCE" enabled="true" />
-            <object-type name="PROCEDURE" enabled="true" />
-            <object-type name="FUNCTION" enabled="true" />
-            <object-type name="PACKAGE" enabled="true" />
-            <object-type name="TYPE" enabled="true" />
-            <object-type name="TYPE_ATTRIBUTE" enabled="true" />
-            <object-type name="ARGUMENT" enabled="true" />
-            <object-type name="DIMENSION" enabled="true" />
-            <object-type name="CLUSTER" enabled="true" />
-            <object-type name="DBLINK" enabled="true" />
-          </object-type-filter>
-        </object-filters>
-      </connection>
-      <connection id="9a998b6a-7e73-4d4b-b549-75d81570b729" active="true" signed="true">
+      <connection id="df8b267a-991f-4b3d-9366-09d1a2b0b890" active="true" signed="true">
         <database>
           <name value="UOL" />
-          <description value="Uol MYSQL" />
+          <description value="MySQL hosted in UOL" />
           <database-type value="MYSQL" />
           <config-type value="BASIC" />
-          <database-version value="9999.0" />
+          <database-version value="5.6" />
           <driver-source value="BUNDLED" />
           <driver-library value="" />
           <driver value="" />
           <url-type value="DATABASE" />
           <host value="geniusfut.mysql.uhserver.com" />
           <port value="3306" />
-          <database value="mysql" />
+          <database value="geniusfut" />
           <tns-folder value="" />
           <tns-profile value="" />
           <type value="USER_PASSWORD" />
