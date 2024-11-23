@@ -3,8 +3,7 @@ from UTILS.connection import get_connection
 import streamlit as st
 from UTILS.utils import verificar_cookies
 from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
-
-administrador = 3
+from main import administrador
 
 # Configuração da página
 st.set_page_config(page_title="Painel do Administrador", page_icon="icone_mini.png")
