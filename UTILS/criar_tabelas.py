@@ -7,7 +7,7 @@ def criar_tabelas():
     cursor = conn.cursor()
 
     # Criar a nova database geniusfut_database
-    cursor.execute("CREATE DATABASE IF NOT EXISTS geniusfut_database")
+    cursor.execute("CREATE DATABASE IF NOT EXISTS geniusfut")
 
     # Create table for credentials
     cursor.execute('''CREATE TABLE IF NOT EXISTS credenciais (
@@ -55,6 +55,7 @@ def criar_tabelas():
                 cliente_id INT,
                 datahora DATETIME,
                 valor_compra DECIMAL(10, 2),
+                id_pagamento_mercado_pago VARCHAR(255),
                 FOREIGN KEY (cliente_id) REFERENCES clientes (id) ON DELETE CASCADE
             )
         ''')
@@ -64,5 +65,27 @@ def criar_tabelas():
     cursor.close()
     conn.close()
 
-criar_tabelas()
+
+def listar_tabelas():
+    # Conectar ao banco de dados
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Selecionar o banco de dados
+    cursor.execute("USE geniusfut")
+
+    # Listar as tabelas existentes
+    cursor.execute("SHOW TABLES")
+
+    print("Tabelas no banco de dados 'geniusfut':")
+    for (table_name,) in cursor:
+        print(table_name)
+
+    cursor.close()
+    conn.close()
+
+# listar_tabelas()
+
+# criar_tabelas()
+
 
