@@ -88,8 +88,8 @@ with col1:
 with col2:
     # Botão para voltar à tela de login
     if st.button("Já tem uma conta? Faça login"):
-        st.session_state['screen'] = 'login'  # Muda a tela para login
-        st.rerun()
+        st.switch_page("paginas_app/login.py")  # Redireciona para a página de login
+
 
 
 

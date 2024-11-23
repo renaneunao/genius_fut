@@ -2,6 +2,7 @@ from UTILS.connection import get_connection
 from UTILS.utils import verificar_cookies
 import streamlit as st
 from streamlit_cookies_controller import CookieController, RemoveEmptyElementContainer
+import time
 
 controller = CookieController(key='cookies')
 RemoveEmptyElementContainer()
@@ -18,6 +19,7 @@ def verificar_login(usuario, senha):
 
     return data
 
+
 cliente_id, logged_in = verificar_cookies(controller)
 
 st.title("Login")
@@ -29,7 +31,6 @@ with col1:
     if st.button("Entrar"):
         credenciais = verificar_login(usuario, senha)
         if credenciais:
-            import time
             cliente_id = credenciais[0]
             controller.set('logged_in', True)
             controller.set('cliente_id', cliente_id)

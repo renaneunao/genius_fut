@@ -9,7 +9,10 @@ from UTILS.utils import (get_prediction,
                          stats_to_dataframe,
                          calcular_saldo,
                          get_llm,
-                         verificar_cookies)
+                         verificar_cookies,
+                         verificar_trial,
+                         recarga_inicial
+                         )
 from UTILS.connection import get_connection
 from UTILS.st_cache_functions import (fetch_timezones,
                                       fetch_countries,
@@ -120,12 +123,16 @@ preco_odd_min = 0.005
 preco_inicial = 0
 
 # Exibir a imagem na sidebar
-st.sidebar.image('logo_atualizada.png', use_column_width=True)
+st.sidebar.image('logo_atualizada.png', use_container_width=True)
 
 # Verifica os cookies e exibe os valores
 cliente_id, logged_in = verificar_cookies(controller)
 
 if cliente_id:
+
+    trial_credits = verificar_trial(cliente_id)
+    controller.set('trial_credits', trial_credits)
+
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -141,6 +148,11 @@ if cliente_id:
         description=f"Aqui o GREEN é certo! Saldo Atual: ${saldo}",
         color_name="green-70",
     )
+
+    if trial_credits == 0:
+        if st.button("$1,00 Inicial Gratuito"):
+            recarga_inicial(st, cliente_id, 1)
+            st.rerun()
 
     timezones = fetch_timezones()
     default_timezone = "America/Sao_Paulo"
@@ -160,12 +172,12 @@ if cliente_id:
 
     # Criando uma lista de LLMs com seus respectivos preços
     llms = {
+        "GPT-4o Mini": preco_llm_gpt_4o_mini,
+        "GPT-3.5 Turbo": preco_llm_gpt_3_5_turbo,
+        # "GPT-4o": preco_llm_gpt_4o,
         "Gemini 1.5 Flash": preco_llm_gemini_1_5_flash,
         "Gemini 1.5 Pro": preco_llm_gemini_1_5_pro,
         "Gemini Pro": preco_llm_gemini_pro,
-        "GPT-3.5 Turbo": preco_llm_gpt_3_5_turbo,
-        "GPT-4o Mini": preco_llm_gpt_4o_mini,
-        "GPT-4o": preco_llm_gpt_4o,
     }
 
     selected_llm = st.sidebar.selectbox(
@@ -180,7 +192,7 @@ if cliente_id:
     # Criar expander para opções 1, 2 e 3 na primeira coluna
     with col1:
         opcao1 = st.checkbox("Vitória", value=True)
-        opcao2 = st.checkbox("Gols")
+        opcao2 = st.checkbox("Gols", value=True)
         opcao3 = st.checkbox("Cartões")
 
         bet_temperature = vertical_slider(
@@ -201,7 +213,7 @@ if cliente_id:
 
     # Criar expander para opções 4, 5 e 6 na segunda coluna
     with col2:
-        opcao4 = st.checkbox("Cantos")
+        opcao4 = st.checkbox("Cantos", value=True)
         opcao5 = st.checkbox("Marcador")
         opcao6 = st.checkbox("Finalização")
 
@@ -251,9 +263,14 @@ if cliente_id:
 
     # Verificar se pelo menos uma opção foi selecionada em cada grupo
     erro = False
-    if not any([opcao1, opcao2, opcao3, opcao4, opcao5, opcao6]):
-        st.sidebar.warning("Você deve selecionar pelo menos uma opção de Tipo de Aposta.")
+    # Contando as opções selecionadas
+    opcoes = [opcao1, opcao2, opcao3, opcao4, opcao5, opcao6]
+    selecionadas = sum(opcoes)  # Soma o número de opções selecionadas (True é tratado como 1)
+
+    if selecionadas < 3:
+        st.sidebar.warning("Você deve selecionar pelo menos 3 opções de Tipo de Aposta.")
         erro = True
+
     if not selected_bookmakers:  # Esta condição verifica se a lista está vazia
         st.sidebar.warning("Você deve selecionar pelo menos uma opção de Casa de Aposta.")
         erro = True
@@ -358,6 +375,11 @@ if cliente_id:
         # Dropdown para selecionar o timezone
         selected_timezone = st.selectbox("Selecione o timezone:", timezones,
                                          index=timezones.index(default_timezone))
+
+    # Alinha o botão com o texto
+    if st.sidebar.button("Comprar Créditos", key="comprar_creditos_btn"):
+        st.switch_page("paginas_app/comprar_creditos.py")  # Redireciona para a página de login
+
 
     # Alinha o botão com o texto
     if st.sidebar.button("Sair da Conta", key="logout_btn"):
@@ -507,10 +529,6 @@ if cliente_id:
                 erro = True
                 st.write("Nenhuma liga encontrada para o país selecionado.")
 
-
-
-
-
     if predictions is not None and df_bets is not None:
         col1, col2 = st.columns(2)
 
@@ -565,7 +583,7 @@ if cliente_id:
         # st.write(df_bets)
     else:
         st.write("Escolha um jogo e deixe a IA calcular a previsão.")
-        st.sidebar.image('logo_atualizada.png', use_column_width=True)
+        st.sidebar.image('logo_atualizada.png', use_container_width=True)
 
 elif cliente_id is False:
     all_cookies = controller.getAll()

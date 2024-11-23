@@ -125,6 +125,64 @@ def verificar_cookies(controller):
     return cliente_id, logged_in
 
 
+def verificar_trial(cliente_id):
+    # Estabelecer a conexão com o banco de dados
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Executar a query para buscar o trial credits
+    cursor.execute('SELECT trial_credits FROM acesso_cliente WHERE cliente_id = %s', (cliente_id,))
+
+    # Obter o resultado da consulta
+    trial_credits = cursor.fetchone()
+
+    # Fechar o cursor e a conexão
+    cursor.close()
+    conn.close()
+
+    # Validar se um resultado foi encontrado
+    if trial_credits:
+        trial_credits = trial_credits[0]  # Acessar o primeiro item da tupla
+        print(f'Trial credits obtido para o cliente {cliente_id}: {trial_credits}')
+    else:
+        trial_credits = 0  # Definir um valor padrão, se não houver resultado
+        print(f'Nenhum trial credits encontrado para o cliente {cliente_id}. Retornando 0.')
+    return trial_credits
+
+
+def recarga_inicial(st, cliente_id, valor):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    # Consultar o saldo total atual do cliente
+    cursor.execute('''
+        SELECT SUM(valor_compra) 
+        FROM compras_creditos 
+        WHERE cliente_id = %s
+    ''', (cliente_id,))
+    saldo_atual = cursor.fetchone()[0] or 0  # Se for None, atribui 0
+
+    # Adicionar 1 dólar na tabela de compras de créditos
+    cursor.execute('''
+        INSERT INTO compras_creditos (cliente_id, datahora, valor_compra)
+        VALUES (%s, %s, %s)
+    ''', (cliente_id, datetime.now(), valor))
+
+    # Atualizar trial_credits para 1
+    cursor.execute('UPDATE acesso_cliente SET trial_credits = 1 WHERE cliente_id = %s', (cliente_id,))
+
+    # Salvar as mudanças
+    conn.commit()
+
+    # Fechar conexão
+    cursor.close()
+    conn.close()
+
+    # Exibir mensagem de sucesso com o saldo atualizado
+    novo_saldo = saldo_atual + 1
+    st.success(f"Recarga inicial realizada com sucesso! Saldo atual: ${novo_saldo:.2f}")
+
+
 def get_llm(model_name, temperature):
     from langchain_openai import ChatOpenAI
     from langchain_google_genai import ChatGoogleGenerativeAI
@@ -209,3 +267,17 @@ def get_prediction(fixture_id, custo_consulta, cliente_id, configuracao_consumo)
     else:
         # Return default values if no data is available
         return 'N/A', 'N/A', 'No data available', 'No advice available', 'No data available', 'No data available', 'No advice available', None, None
+
+
+# Função para obter a cotação do dólar
+def obter_cotacao_dolar(st):
+    url = "https://economia.awesomeapi.com.br/json/last/USD-BRL"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        dados = response.json()
+        cotacao = float(dados["USDBRL"]["bid"])
+        return cotacao
+    except requests.RequestException as e:
+        st.error(f"Erro ao obter cotação do dólar: {str(e)}")
+        return None
