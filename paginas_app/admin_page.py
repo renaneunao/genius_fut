@@ -10,10 +10,10 @@ import os
 load_dotenv()
 
 # Acessa a variável de ambiente
-administrador = os.getenv("ADMINISTRADOR")
+administrador = int(os.getenv("ADMINISTRADOR"))
 
 # Configuração da página
-st.set_page_config(page_title=f"Painel do Administrador {administrador}", page_icon="icone_mini.png")
+st.set_page_config(page_title=f"Painel do Administrador {administrador} {type(administrador)}", page_icon="icone_mini.png")
 
 # Inicializa o controlador de cookies
 controller = CookieController(key='cookies')
