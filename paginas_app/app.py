@@ -39,7 +39,7 @@ load_dotenv()
 administrador = int(os.getenv("ADMINISTRADOR"))
 
 # Configuração da página
-st.set_page_config(page_title=f"GeniusFut {administrador} {type(administrador)}", page_icon="icone_mini.png")
+st.set_page_config(page_title=f"GeniusFut", page_icon="icone_mini.png")
 
 
 # Inicializa o controlador de cookies
