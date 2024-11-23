@@ -33,7 +33,7 @@ from streamlit_vertical_slider import vertical_slider
 # Configuração da página
 st.set_page_config(page_title="GeniusFut", page_icon="icone_mini.png")
 
-administrador = 3
+administrador = 1
 
 
 # Inicializa o controlador de cookies
