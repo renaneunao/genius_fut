@@ -151,17 +151,20 @@ def get_prompt(st, selected_language, user_name, home_team_name, away_team_name,
         Bet Temperature:
         {bet_temperature}
         
-        - **Apostas ousadas** (para temperaturas quentes):
+        - **Apostas ousadas** (para bet_temperature acima de 0.6):
           - Jogador a marcar, mais de 3.5 gols, menos de 0.5 gols.
           - **Atenção especial para apostas em um único tempo**: Garanta que se forem sugeridas apostas para o primeiro ou 
           segundo tempo (ex: Over 1.5 gols no primeiro tempo), elas não contradigam a tendência geral da partida. Além disso, 
           **não repita apostas** para o jogo completo e para tempos específicos, exceto quando fizer sentido estratégico.
         
-        - **Apostas mornas** (para temperaturas intermediárias):
+        - **Apostas mornas** (para bet_temperature entre 0,4 e 0.6):
           - Vitória da casa com mais de 1.5 gols, empate, menos de 2.5 gols, entre outras.
         
-        - **Apostas frias** (para temperaturas baixas):
+        - **Apostas frias** (para bet_temperature abaixo de 0.4):
           - Vitória ou empate da casa (ou fora), menos de 4.5 gols, menos de 15 escanteios, entre outras.
+          - Considere que bet_temperature 0 são as apostas mais seguras das disponíveis (com as menores odds),
+          como apostas de Double Chance, ou o menor número de escanteios para over, ou maior numero de escanteios
+          para under, etc.
 
         Por favor, retorne as {max_bets} melhores opções de apostas simples, levando em consideração as informações 
         fornecidas. Para cada aposta, retorne as seguintes informações:
