@@ -32,6 +32,7 @@ from streamlit_extras.bottom_container import bottom
 from streamlit_extras.grid import grid
 from streamlit_vertical_slider import vertical_slider
 
+
 # Carrega as variáveis do arquivo .env
 load_dotenv()
 
@@ -201,45 +202,33 @@ if cliente_id:
         opcao2 = st.checkbox("Gols", value=True)
         opcao3 = st.checkbox("Cartões")
 
-        bet_temperature = vertical_slider(
-            key="temperatura",
-            default_value=0,  # Representa 0.5 na escala de 0 a 100
-            height=100,
-            step=0.1,
-            min_value=0,
-            max_value=1,
-            track_color="green",
-            thumb_color="white",  # Bolinha
-            slider_color=('red', 'white'),
-            label="Temp",
-        )
-
-        controller.set("bet_temperature", bet_temperature)
-    preco_inicial += (bet_temperature * preco_temperatura)
-
     # Criar expander para opções 4, 5 e 6 na segunda coluna
     with col2:
         opcao4 = st.checkbox("Cantos", value=True)
         opcao5 = st.checkbox("Marcador")
         opcao6 = st.checkbox("Finalização")
 
-        min_odd = vertical_slider(
-            key="odd_minima",
-            default_value=1.1,  # Representa 1.1 na escala de 1.1 a 15
-            height=100,
-            step=0.1,
-            min_value=1.1,
-            max_value=15,  # Representa até 15.0
-            track_color="green",
-            thumb_color="blue",  # Bolinha
-            slider_color=('blue', 'white'),
-            label="Odd Mín.",
-        )
+    bet_temperature = st.sidebar.slider(
+        key="temperatura",
+        step=0.1,
+        min_value=0.0,
+        max_value=1.0,
+        label="Temperatura",
+    )
 
-        preco_inicial += (min_odd * preco_odd_min)
+    # Cálculo das odds mínimas e máximas com base na temperatura
+    odd_min = 1.2 + (bet_temperature * 3)  # Fórmula ajustada para crescer de 1.2 até 1.6 (em 0.1 de temperatura)
 
-        # Armazena o valor da odd mínima no controller
-        controller.set('min_odd_value', min_odd)
+    # Condicional para definir odd_max baseado na temperatura
+    if bet_temperature == 1.0:
+        odd_max = 100  # Quando a temperatura for máxima, odd_max será 10
+    else:
+        odd_max = odd_min + (bet_temperature * 1.5) + 0.4  # Aumenta gradualmente com a temperatura
+
+    st.write(f'Odd Mínima: {odd_min} e Odd Maxima: {odd_max}')
+
+    controller.set("bet_temperature", bet_temperature)
+    preco_inicial += (bet_temperature * preco_temperatura)
 
     # Mapeamento de grupos de bets
     bet_groups = {
@@ -478,17 +467,26 @@ if cliente_id:
                                                 if bet_name in selected_bets:  # Verificar se a bet está no grupo selecionado
                                                     for value in bet["values"]:
                                                         odd_value = float(value["odd"])
-                                                        if odd_value >= min_odd:  # Aplicar o filtro da odd mínima
+                                                        if odd_min <= odd_value <= odd_max:
                                                             data.append({
                                                                 "Casa": bookmaker["name"],
                                                                 "Bet": bet_name,  # Adicionar o nome da bet
                                                                 "Valor": value["value"],
                                                                 "Odd": value["odd"]
                                                             })
+                                                            # Criar DataFrame
+                                                            df_bets = pd.DataFrame(data)
+                                                            # Obter o diretório do arquivo atual
+                                                            current_directory = os.path.dirname(__file__)
+
+                                                            # Caminho completo para salvar o arquivo Excel
+                                                            file_path = os.path.join(current_directory, "bets.xlsx")
+
+                                                            # Salvar o DataFrame como Excel
+                                                            df_bets.to_excel(file_path, index=False)
 
                                         # Criar DataFrame
                                         df_bets = pd.DataFrame(data)
-                                        print(f'Finalizei a data, segue: {data}')
 
                                         # Mostrar DataFrame no Streamlit
                                         if not df_bets.empty:
