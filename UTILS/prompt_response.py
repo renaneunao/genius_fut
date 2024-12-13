@@ -123,18 +123,7 @@ def get_prompt(st, selected_language, user_name, home_team_name, away_team_name,
         # Encontrar as 20 melhores bets usando bet_expert_chain
         top_bets = bet_expert_chain(trend_line, df_bets, bets_usuario)
 
-    def simple_bet_expert_chain(top_bets, trend_line, bet_temperature, selected_bets):
-        # Definindo o número de apostas a serem escolhidas com base na temperatura
-        if bet_temperature == 0:
-            max_bets = 1
-        elif 0.1 <= bet_temperature <= 0.3:
-            max_bets = 2
-        elif 0.4 <= bet_temperature <= 0.6:
-            max_bets = 3
-        elif 0.6 <= bet_temperature <= 0.8:
-            max_bets = 4
-        else:  # bet_temperature > 0.8
-            max_bets = 4
+    def simple_bet_expert_chain(top_bets, trend_line, selected_bets):
 
         simple_bet_prompt_template = """
         Você é um especialista em apostas de futebol. Sua tarefa é analisar as apostas fornecidas e a linha de tendência 
@@ -147,37 +136,20 @@ def get_prompt(st, selected_language, user_name, home_team_name, away_team_name,
 
         Apostas disponíveis:
         {top_bets}
-        
-        Bet Temperature:
-        {bet_temperature}
-        
-        - **Apostas ousadas** (para bet_temperature acima de 0.6):
-          - Jogador a marcar, mais de 3.5 gols, menos de 0.5 gols.
-          - **Atenção especial para apostas em um único tempo**: Garanta que se forem sugeridas apostas para o primeiro ou 
-          segundo tempo (ex: Over 1.5 gols no primeiro tempo), elas não contradigam a tendência geral da partida. Além disso, 
-          **não repita apostas** para o jogo completo e para tempos específicos, exceto quando fizer sentido estratégico.
-        
-        - **Apostas mornas** (para bet_temperature entre 0,4 e 0.6):
-          - Vitória da casa com mais de 1.5 gols, empate, menos de 2.5 gols, entre outras.
-        
-        - **Apostas frias** (para bet_temperature abaixo de 0.4):
-          - Vitória ou empate da casa (ou fora), menos de 4.5 gols, menos de 15 escanteios, entre outras.
-          - Considere que bet_temperature 0 são as apostas mais seguras das disponíveis (com as menores odds),
-          como apostas de Double Chance, ou o menor número de escanteios para over, ou maior numero de escanteios
-          para under, etc.
 
-        Por favor, retorne as {max_bets} melhores opções de apostas simples, levando em consideração as informações 
-        fornecidas. Para cada aposta, retorne as seguintes informações:
+        Por favor, retorne as melhores opções de apostas simples, levando em consideração as informações 
+        fornecidas e a linha de tendência. Para cada aposta, retorne as seguintes informações:
 
         - Casa: a casa de aposta ou time associado
         - Aposta: o tipo de aposta
+        - Info Aposta: o quantitativo a ser apostado
         - Sujeito: casa, fora ou ambos
-        - ODD: a odd associada à aposta
+        - ODD: a odd associada à aposta (o valor multiplicador)
 
-        Retorne o resultado em formato JSON com uma lista de dicionários contendo essas quatro informações.
+        Retorne o resultado em formato JSON com uma lista de dicionários contendo essas cinco informações.
         """
 
-        simple_bet_prompt = PromptTemplate(input_variables=["selected_bets", "top_bets", "trend_line", "bet_temperature", "max_bets"],
+        simple_bet_prompt = PromptTemplate(input_variables=["selected_bets", "top_bets", "trend_line"],
                                            template=simple_bet_prompt_template,
                                            partial_variables={"format_instructions": parser.get_format_instructions()})
         simple_bet_chain = simple_bet_prompt | llm | parser
@@ -186,24 +158,11 @@ def get_prompt(st, selected_language, user_name, home_team_name, away_team_name,
             "selected_bets": selected_bets,
             "top_bets": top_bets,
             "trend_line": trend_line,
-            "bet_temperature": bet_temperature,
-            "max_bets": max_bets
         })
 
         return simple_bet_chain_result
 
-    def multiple_bet_expert_chain(top_bets, trend_line, bet_temperature, selected_bets):
-        # Definindo o número de apostas a serem escolhidas com base na temperatura
-        if bet_temperature == 0:
-            max_bets = 1
-        elif 0.1 <= bet_temperature <= 0.3:
-            max_bets = 2
-        elif 0.4 <= bet_temperature <= 0.6:
-            max_bets = 3
-        elif 0.6 <= bet_temperature <= 0.8:
-            max_bets = 4
-        else:  # bet_temperature > 0.8
-            max_bets = 4
+    def multiple_bet_expert_chain(top_bets, trend_line, selected_bets):
 
         multiple_bet_prompt_template = """
         Você é um especialista em apostas de futebol. Sua tarefa é analisar as apostas fornecidas e a linha de tendência 
@@ -216,9 +175,6 @@ def get_prompt(st, selected_language, user_name, home_team_name, away_team_name,
 
         Apostas disponíveis:
         {top_bets}
-
-        Bet Temperature:
-        {bet_temperature}
 
         Instruções para Definição de Múltiplas:
 
@@ -245,19 +201,21 @@ def get_prompt(st, selected_language, user_name, home_team_name, away_team_name,
         6. ** Múltiplas não são várias apostas avulsas, mas a combinação de várias apostas que precisam acontecer
          em conjunto, para que o resultado seja positivo, por exemplo: "bet: Casa vence + bet: Mais de 9 cantos no jogo.**
 
-        Por favor, monte as {max_bets} melhores apostas múltiplas com base nas informações fornecidas. 
+        Por favor, monte as melhores apostas múltiplas com base nas informações fornecidas. 
         Para cada múltipla, retorne as seguintes informações:
 
         - Casa: a casa de aposta ou time associado
         - Aposta: o tipo de aposta (no mínimo duas apostas, cada uma em uma chave)
+        - Info Aposta: quantitativo da aposta (ex: 1:0)
         - Sujeito: casa, fora ou ambos
-        - ODD: a odd de cada uma das bets
-        - ODD FINAL: uma chave retornando o valor final da multiplicação das odds componentes
+        - ODD: a odd de cada uma das bets (valor do multiplicador)
+        - ODD FINAL: uma chave retornando o valor final da multiplicação dos multiplicadores de ODD. Não confunda com a 
+        info da aposta.
 
         Retorne o resultado em formato JSON com uma lista de dicionários contendo essas informações.
         """
 
-        multiple_bet_prompt = PromptTemplate(input_variables=["selected_bets", "top_bets", "trend_line", "bet_temperature", "max_bets"],
+        multiple_bet_prompt = PromptTemplate(input_variables=["selected_bets", "top_bets", "trend_line"],
                                              template=multiple_bet_prompt_template,
                                              partial_variables={"format_instructions": parser.get_format_instructions()})
         multiple_bet_chain = multiple_bet_prompt | llm | parser
@@ -266,16 +224,14 @@ def get_prompt(st, selected_language, user_name, home_team_name, away_team_name,
             "selected_bets": selected_bets,
             "top_bets": top_bets,
             "trend_line": trend_line,
-            "bet_temperature": bet_temperature,
-            "max_bets": max_bets
         })
 
         return multiple_bet_chain_result
 
     with st.spinner('Calculando apostas simples 💸 ...'):
-        simple_bet = simple_bet_expert_chain(top_bets, trend_line, bet_temperature, bets_usuario)
+        simple_bet = simple_bet_expert_chain(top_bets, trend_line, bets_usuario)
     with st.spinner('Agora calculando as múltiplas 🤑 ...'):
-        multiple_bet = multiple_bet_expert_chain(top_bets, trend_line, bet_temperature, bets_usuario)
+        multiple_bet = multiple_bet_expert_chain(top_bets, trend_line, bets_usuario)
 
     def betting_expert_report(st, selected_language, user_name, simple_bet, multiple_bet, stats_casa, stats_fora,
                               home_team_name, away_team_name, home_team_last_5_results, away_team_last_5_results):
@@ -302,7 +258,7 @@ def get_prompt(st, selected_language, user_name, home_team_name, away_team_name,
             - Desempenho geral do time da casa: `{stats_casa}`.
             - Desempenho geral do time visitante: `{stats_fora}`.
     
-            1. **Apostas Simples**: Receba um JSON contendo apostas simples, incluindo informações como casa de aposta, 
+            1. **Apostas Simples**: Voce recebeu um JSON contendo apostas simples, incluindo informações como casa de aposta, 
             tipo de aposta, sujeito e odd. Explique cada aposta de forma concisa e clara.
             Json Simple Bet:
             {simple_bet}
