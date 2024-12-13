@@ -225,8 +225,6 @@ if cliente_id:
     else:
         odd_max = odd_min + (bet_temperature * 1.5) + 0.4  # Aumenta gradualmente com a temperatura
 
-    st.write(f'Odd Mínima: {odd_min} e Odd Maxima: {odd_max}')
-
     controller.set("bet_temperature", bet_temperature)
     preco_inicial += (bet_temperature * preco_temperatura)
 
