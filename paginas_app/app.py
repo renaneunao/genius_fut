@@ -188,7 +188,7 @@ if cliente_id:
     }
 
     selected_llm = st.sidebar.selectbox(
-        "Selecione o cérbro do 🤖:",
+        "Selecione o cérebro do 🤖:",
         options=list(llms.keys())
     )
 
